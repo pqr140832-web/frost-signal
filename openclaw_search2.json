@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://zhuanlan.zhihu.com/p/2005252288558674437",
+    "name": "OpenClaw实战指南：从部署到\"人剑合一\"的完整进阶手册（上篇）",
+    "snippet": "我们将通过一系列真实场景的案例，展示OpenClaw如何解决实际问题：自动化邮件处理、智能日程管理、会议摘要生成、网页信息监控、代码辅助开发等。每个案例都会提供完整的配置 ...",
+    "host_name": "zhuanlan.zhihu.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://aws.amazon.com/cn/blogs/china/openclaw-security-and-feature-enhancement-practices",
+    "name": "OpenClaw 安全和功能增强实践| 亚马逊AWS官方博客",
+    "snippet": "摘要：本文记录了我在AWS EC2 上部署OpenClaw后，围绕安全防护和功能增强两条主线所做的一系列配置。不是官方教程，而是实际踩坑后的工程实践。",
+    "host_name": "aws.amazon.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://opc.csdn.net/69b27d880a2f6a37c596cc98.html",
+    "name": "openclaw新手入门指南：一文看懂环境搭建、模型配置与WebUI 远程",
+    "snippet": "openclaw新手入门指南：一文看懂环境搭建、模型配置与WebUI 远程访问 · 1. 基础设施层：OpenClaw 运行环境的初始化 · 2. 算力与模型层：蓝耘MaaS 平台的接入 ...",
+    "host_name": "opc.csdn.net",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://cloud.tencent.com/developer/article/2635123",
+    "name": "OpenClaw 新手保姆级安装配置指南：从零开始，连接飞书",
+    "snippet": "OpenClaw自动化工具安装指南：从Node.js环境配置到飞书机器人连接全流程。提供详细步骤包括CLI安装、API密钥配置、飞书开发者后台设置及测试方法。",
+    "host_name": "cloud.tencent.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.cnblogs.com/smartloli/p/19653910",
+    "name": "OpenClaw 架构设计全解析- 哥不是小萝莉 - 博客园",
+    "snippet": "OpenClaw 将传统的对话式机器人进化为具备行动能力的Agent。它部署在您的本地硬件环境中，作为持续运行的智能助手，通过现有的消息系统与交互界面无缝接入 ...",
+    "host_name": "www.cnblogs.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://open.work.weixin.qq.com/help2/pc/21657",
+    "name": "OpenClaw如何接入企业微信智能机器人",
+    "snippet": "1、打开企业微信客户端，进入工作台->智能机器人，点击创建机器人->手动创建； · 2、进入创建页面后，选择API模式创建（页面提示「如需使用自有系统获取成员与 ... Missing: 前端 定义 嵌入",
+    "host_name": "open.work.weixin.qq.com",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/clawdbot-ai/awesome-openclaw-skills-zh",
+    "name": "Awesome OpenClaw Skills (中文官方库) - GitHub",
+    "snippet": "当开发人员提及以下内容时使用：(1) PagerKit、PKPagesView、PKPage，(2) 自定义页面控件、指示器或分页行为，(3) 跨平台SwiftUI 分页，(4) 动态页面生成，(5) ...",
+    "host_name": "github.com",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.youtube.com/watch?v=y0NdTW0SFd4",
+    "name": "最佳助理OpenClaw Chat Gateway 全网独家配方，极简配置 - YouTube",
+    "snippet": "一、全网最低折扣购买机场、VPN、VPS、GPT奈飞拼车、住宅IP等： 1，安格超市（购买机场/VPS/住宅IP/流媒体账号/GPT拼车 ...",
+    "host_name": "www.youtube.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://zhuanlan.zhihu.com/p/2011197075765884377",
+    "name": "OpenClaw超完整解说：架构设计与智能体内核—2更（二开必看）",
+    "snippet": "OpenClaw的Model Provider体系通过“内置目录+ 自定义配置+ 多认证轮换+ 模型降级”实现多提供商统一接入。最新版还支持配置备用大模型，以应对异常或超时的情况，考虑很周到。",
+    "host_name": "zhuanlan.zhihu.com",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://grapecity.csdn.net/69a7f95d54b52172bc5ef533.html",
+    "name": "OpenClaw 安装与配置完整教程（本地AI助手部署指南）",
+    "snippet": "整个流程主要分为三步：. 1️⃣ 基础环境准备 2️⃣ OpenClaw 源码安装与构建 3️⃣ 启动并完成配置向导. 按照步骤操作，10 分钟即可完成部署。",
+    "host_name": "grapecity.csdn.net",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]
