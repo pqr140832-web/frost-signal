@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://community.openai.com/t/invalid-api-key-401-error-in-vscode-but-it-shows-the-correct-api-key/1107051",
+    "name": "Invalid API Key 401 Error in VSCode, but it shows the",
+    "snippet": "Jan 29, 2025 — You're encountering a 401 error when trying to use your API key in VSCode, even though the key appears to be correct because of a wrong authentication. Read more",
+    "host_name": "community.openai.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/musistudio/claude-code-router/issues/1125",
+    "name": "401 Invalid API Key Error After Successful Login in Claude",
+    "snippet": "Jan 6, 2026 — I immediately receive the following error: 401 Invalid API key . All prompts result in a 401 Invalid API key error. Please help me on this ... Read more",
+    "host_name": "github.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://stackoverflow.com/questions/75827468/why-am-i-getting-a-401-error-even-though-i-am-getting-a-response-when-linking-my",
+    "name": "openai api - Why am I getting a 401 error even though",
+    "snippet": "My api key is in a .env.local file in the root folder of my site. The 401 error in the browser states: Unhandled Runtime Error Error ... Read more",
+    "host_name": "stackoverflow.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://dev.to/geoapify-maps-api/how-to-fix-401-unauthorized-error-when-calling-the-api-4kld",
+    "name": "How to Fix 401 Unauthorized Error When Calling the API",
+    "snippet": "Sep 29, 2025 — It means the API simply doesn't recognize who you are — usually because the API key is missing, wrong, or invalid . Common reasons for 401 errors. Read more",
+    "host_name": "dev.to",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://portkey.ai/error-library/authentication-error-10505",
+    "name": "[Solved] Incorrect API key provided. You can find your",
+    "snippet": "To resolve the \"Incorrect API key provided\" error in the OpenAI API, you need to ensure that your API key is correctly set and valid . Read more",
+    "host_name": "portkey.ai",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  }
+]
