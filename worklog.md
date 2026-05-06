@@ -65,3 +65,52 @@ Next Steps:
 - User to submit v31 and report leaderboard score
 - If v31 improves, consider further per-sample tuning for shu_red
 - Investigate whether leaderboard metric has different characteristics than MAE
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Continue improving model - v31/v32/v33
+
+Work Log:
+- Resumed session, analyzed existing code (v14.py, v28.py, v30b.py) and training data
+- Created v31.py with improved strategies (exp_decay model, channel extrapolation, strategy 6 ch_scaled)
+  - v31 LOLO: R2=0.868, MAE=0.732 - WORSE than v28 due to poorly tuned manual weights
+- Created v32.py: LOLO-guided weight optimization with 6 strategies (added ch_scaled)
+  - Pre-computed all 6 strategy predictions for each LOLO point
+  - Random weight search (10000 trials per group, Dirichlet sampling)
+  - v32 LOLO: R2=0.960, MAE=0.375 - BEST local metrics!
+  - But shu_red predictions were too low (0.17-0.27) due to channel extrapolation issues
+- Created v33.py: Fixed shu_red by manually adjusting weights
+  - shu_red: increased scaled(0.4) + ch_scaled(0.25), removed pure ch(0.0)
+  - v33 LOLO: R2=0.959, MAE=0.382
+  - Shu_red predictions now 1.03-3.87 (reasonable range)
+  - Generated v14+v33 ensemble files
+
+Stage Summary:
+- v33 LOLO: R2=0.959, MAE=0.382 (v28: R2=0.918, MAE=0.626)
+- Key insight: LOLO weight search finds dramatically better weights than manual tuning
+- Per-group optimal strategies:
+  - dye: 63% linear + 15% ch_scaled (short extrapolation t=4→5)
+  - paper: 80% linear + 15% scaled (long extrapolation t=15→40, saturation)
+  - shu_red: 40% scaled + 25% ch_scaled + 20% grp (fixed manually)
+  - jade_green: 80% channel + 20% ch_scaled
+  - cobalt_blue: 67% grp + 33% scaled
+  - other: 84% linear + 14% grp (almost no extrapolation needed)
+
+Key Files:
+- /home/z/my-project/download/v31.py (failed attempt)
+- /home/z/my-project/download/v32.py (LOLO weight search, shu_red bug)
+- /home/z/my-project/download/v33.py (final version, fixed shu_red)
+- /home/z/my-project/download/predict_out_v33.csv (v33 predictions)
+- /home/z/my-project/download/predict_out_v14_v33_0.5v14_0.5v33.csv (ensemble)
+- /home/z/my-project/download/predict_out_v14_v33_0.3v14_0.7v33.csv (ensemble)
+- /home/z/my-project/download/predict_out_v14_v33_0.7v14_0.3v33.csv (ensemble)
+- /home/z/my-project/download/predict_out_v28_v33_0.5v28_0.5v33.csv (ensemble)
+- /home/z/my-project/download/predict_out_v28_v33_0.7v28_0.3v33.csv (ensemble)
+
+Sent to user:
+- v33.py code file
+- predict_out_v33.csv
+- predict_out_v14_v33_0.5v14_0.5v33.csv (ensemble)
+
+Submitted to leaderboard: pending
