@@ -1,0 +1,27 @@
+{
+  "cookies": [
+    {
+      "name": "NID",
+      "value": "531=iGjpFBK9QStF3ZHpoNo-HzQ_TeYE-ipkBijvK61gEjlTdkybybJfoc2KIh-Wcwj_lWTz80bn6B89AgU67w5zasIb8_oz0xmg7JxxykC_nJ0fTZafibP0rf-3mJX1ixHPwvcYmpXg5tiwCByL5Tn6kpGeenp3o3hj8fshT5-S3BqjDUkaq336pvegt5IGjKrYn3MMtqkaC2POs81fEw",
+      "domain": ".google.com",
+      "path": "/",
+      "expires": 1793857014.254098,
+      "size": 217,
+      "httpOnly": true,
+      "secure": false,
+      "session": false
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://claudebox.pages.dev",
+      "localStorage": [
+        {
+          "name": "sb-pbdzollgxbtrkbkefcpy-auth-token",
+          "value": "{\"access_token\":\"eyJhbGciOiJFUzI1NiIsImtpZCI6IjZiZTJjMWMwLWM1MTYtNGIxMC1hMjUzLWI0MzAzYjllZmU2NCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3BiZHpvbGxneGJ0cmtia2VmY3B5LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIxYjNiY2U2OS1mY2QyLTQyZjItYjA4NS04ZTI3NDAyNzA3MjQiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzc4MDQ5NDM0LCJpYXQiOjE3NzgwNDU4MzQsImVtYWlsIjoicWluZ3lhbjIwMjZAZ21haWwuY29tIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbCI6InFpbmd5YW4yMDI2QGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjFiM2JjZTY5LWZjZDItNDJmMi1iMDg1LThlMjc0MDI3MDcyNCIsInVzZXJuYW1lIjoi5riF6KiAIn0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoicGFzc3dvcmQiLCJ0aW1lc3RhbXAiOjE3NzgwNDU4MzR9XSwic2Vzc2lvbl9pZCI6IjEwODkzYTQxLTE4NDQtNGY3Zi04MTI3LWE1YzNkNGEyZWUwNiIsImlzX2Fub255bW91cyI6ZmFsc2V9.4pH65SaDSkw4Keik4nEbrjJ0h4tcd78jKcYybm5zhTVPyoVIQqFxLXBOv29I1d5qpTKZkQtvzfvVloelxZ4fnw\",\"token_type\":\"bearer\",\"expires_in\":3600,\"expires_at\":1778049434,\"refresh_token\":\"yzpubepvtrio\",\"user\":{\"id\":\"1b3bce69-fcd2-42f2-b085-8e2740270724\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"qingyan2026@gmail.com\",\"email_confirmed_at\":\"2026-04-19T02:26:25.273114Z\",\"phone\":\"\",\"confirmed_at\":\"2026-04-19T02:26:25.273114Z\",\"last_sign_in_at\":\"2026-05-06T05:37:14.736299165Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"qingyan2026@gmail.com\",\"email_verified\":true,\"phone_verified\":false,\"sub\":\"1b3bce69-fcd2-42f2-b085-8e2740270724\",\"username\":\"清言\"},\"identities\":[{\"identity_id\":\"6976969e-88a4-4190-9962-fc408f60bdbb\",\"id\":\"1b3bce69-fcd2-42f2-b085-8e2740270724\",\"user_id\":\"1b3bce69-fcd2-42f2-b085-8e2740270724\",\"identity_data\":{\"email\":\"qingyan2026@gmail.com\",\"email_verified\":false,\"phone_verified\":false,\"sub\":\"1b3bce69-fcd2-42f2-b085-8e2740270724\",\"username\":\"清言\"},\"provider\":\"email\",\"last_sign_in_at\":\"2026-04-19T02:26:25.25876Z\",\"created_at\":\"2026-04-19T02:26:25.258803Z\",\"updated_at\":\"2026-04-19T02:26:25.258803Z\",\"email\":\"qingyan2026@gmail.com\"}],\"created_at\":\"2026-04-19T02:26:25.231523Z\",\"updated_at\":\"2026-05-06T05:37:14.81465Z\",\"is_anonymous\":false},\"weak_password\":null}"
+        }
+      ],
+      "sessionStorage": []
+    }
+  ]
+}

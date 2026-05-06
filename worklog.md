@@ -188,3 +188,35 @@ Key Files:
 - /home/z/my-project/download/predict_out_v35.csv
 - /home/z/my-project/download/predict_out_super_v2.csv
 - /home/z/my-project/download/predict_out_0.3v14_0.7v35.csv
+---
+Task ID: 1
+Agent: Main Agent
+Task: 咨询Claude Opus 4.6并改进涂料老化色差预测模型
+
+Work Log:
+- 登录claudebox.pages.dev，选择claude-opus-4-6模型
+- Claude GPTS API全部返回401错误（API key过期）
+- 尝试claude-sonnet-4.5-thinking（小鸡农场），回复太长导致浏览器崩溃
+- 尝试gpt-5.4-pro，同样超时
+- 放弃ClaudeBox，转为自己分析改进
+
+- 写v36.py：跨样本迁移学习版
+  - 核心改进：组内所有样本池化建模，个体偏差缩放，10种策略，贝叶斯收缩
+  - 首次运行：R2=0.9746, MAE=0.3469，但shu_red/other组无LOLO评估点
+
+- 写v36b：修复LOSO评估
+  - 添加Leave-One-Sample-Out评估（shu_red, other组）
+  - 添加_compute_adjustment方法实时计算个体调整系数
+  - 运行结果：R2=0.9623, MAE=0.254（MAE大幅改善）
+  - 但曙红预测值过高（ratio_ext策略过于激进）
+
+- 生成v34+v36的多种ensemble预测文件
+  - 几何平均、算术平均(0.5/0.5)、0.3/0.7、0.7/0.3
+  - 三模型ensemble (v14+v34+v36)
+
+Stage Summary:
+- v36b的MAE=0.254优于v34的0.340，但曙红预测偏高
+- v34尚未提交到竞赛平台（之前最佳提交是v14=63.02）
+- 建议提交方案：1) v34原版 2) 0.7v34+0.3v36 ensemble
+- 文件: v36.py, v36b.py, predict_out_v36.csv, predict_out_v34_v36_*.csv
+
