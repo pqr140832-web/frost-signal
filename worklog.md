@@ -34,7 +34,34 @@ Key Files:
 - /home/z/my-project/download/predict_out_v14_v30_0.7v14_0.3v30.csv (ensemble)
 - /home/z/my-project/download/predict_out_3ens_*.csv (3-model ensembles)
 
+---
+Task ID: 2
+Agent: Main Agent
+Task: Improve shu_red group predictions (v31)
+
+Work Log:
+- Analyzed shu_red group in detail: 7 samples, only t=12 and t=18 data points
+- Found group growth ratio median ≈ 1.5 (dE increases 50% every 6 days)
+- Created ratio-based extrapolation strategy for shu_red
+- Added channel-scaled group extrapolation
+- Added anomaly detection for declining samples (shu_red 7)
+- Combined with v30b optimal weights for other groups
+
+Stage Summary:
+- v31 LOLO: overall MAE=0.457 (v30b: 0.490, v28: 0.623)
+- v31 Shu_red LOLO MAE: 0.450 (v30b: 0.635, v28: 0.781) - 29% improvement!
+- v31 Test-set-weighted MAE: 0.332 (v30b: 0.401, v28: 0.511) - 35% better than v28
+- v31 Overall R²: 0.940 (v30b: 0.918, v28: 0.918)
+- Key insight: shu_red benefits from ratio-based extrapolation using group growth factor
+- Generated ensemble files: v14+v31, v30+v31 with various weights
+
+Key Files:
+- /home/z/my-project/upload/v31.py
+- /home/z/my-project/download/predict_out_v31.csv
+- /home/z/my-project/download/predict_out_v14_v31_*.csv
+- /home/z/my-project/download/predict_out_v30_v31_*.csv
+
 Next Steps:
-- User to submit v30b and report leaderboard score
-- If v30b improves, explore further optimizations
-- If not, investigate LOLO-leaderboard discrepancy
+- User to submit v31 and report leaderboard score
+- If v31 improves, consider further per-sample tuning for shu_red
+- Investigate whether leaderboard metric has different characteristics than MAE
