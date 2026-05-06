@@ -114,3 +114,42 @@ Sent to user:
 - predict_out_v14_v33_0.5v14_0.5v33.csv (ensemble)
 
 Submitted to leaderboard: pending
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: v34 - 8-strategy LOLO weight search with ratio + ind_ch_scaled
+
+Work Log:
+- Analyzed v32 code and identified improvement opportunities
+- Added strategy 7: ratio extrapolation (group-level growth ratio)
+- Added strategy 8: individual channel-scaled group channel prediction
+- Expanded search to 8 strategies with 20000 trials per group
+- Used test-set-weighted LOLO evaluation
+- Generated v14+v34, v32+v34, and 3-model ensemble files
+
+Stage Summary:
+- v34 LOLO: R2=0.9668, uMAE=0.3405 (v32: R2=0.960, MAE=0.375)
+- Key improvements per group:
+  - dye: MAE=0.185 (75% ind + 11% ind_ch_scaled)
+  - paper: MAE=0.298 (59% lin + 23% scaled + 17% ratio)
+  - shu_red: MAE=0.491 (86% ratio! - ratio extrapolation dominates)
+  - jade_green: MAE=0.150 (81% channel + 16% scaled)
+  - cobalt_blue: MAE=0.253 (69% grp + 31% scaled)
+  - other: MAE=0.545 (42% grp + 32% lin + 21% ind)
+- Shu_red predictions now 1.4-5.9 (v32: 0.17-0.27)
+- Generated ensemble files for v14+v34, v32+v34, 3-model
+
+Key Files:
+- /home/z/my-project/download/v34.py
+- /home/z/my-project/download/predict_out_v34.csv
+- /home/z/my-project/download/predict_out_v14_v34_*.csv
+- /home/z/my-project/download/predict_out_v32_v34_*.csv
+- /home/z/my-project/download/predict_out_3ens_0.2v14_0.3v32_0.5v34.csv
+- /home/z/my-project/download/predict_out_3ens_0.3v14_0.3v32_0.4v34.csv
+
+Sent to user:
+- v34.py
+- predict_out_v34.csv
+
+Submitted to leaderboard: pending
