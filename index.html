@@ -1400,14 +1400,15 @@ async function sendMessage() {
 
   if (error) { alert('发送失败：' + error.message); return; }
 
-  // 立即渲染，标记ID防止WebSocket重复
+  // 立即渲染，标记ID防止轮询重复
   sendingMsgIds.add(msg.id);
-  
+  renderedMsgIds.add(msg.id);
+
   let uploadedFiles = [];
   if (filesToSend.length > 0) {
     uploadedFiles = await uploadFiles(msg.id, filesToSend);
   }
-  
+
   appendMessage(msg, uploadedFiles, true);
 
   // update conversation timestamp
