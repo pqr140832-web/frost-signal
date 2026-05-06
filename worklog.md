@@ -260,3 +260,28 @@ Key Files:
 - /home/z/my-project/download/v40.py
 - /home/z/my-project/download/predict_out_v40.csv
 
+---
+Task ID: 1
+Agent: main
+Task: Fix Chinese encoding issue and add download/preview functionality in frost-signal
+
+Work Log:
+- Read the frost-signal frontend code (index.html) to understand current file rendering
+- Identified the issue: forceDownload function used raw ArrayBuffer without explicit UTF-8 TextDecoder
+- Fixed forceDownload to use TextDecoder("utf-8", {fatal:false}) for proper Chinese text decoding
+- Added triggerDownload helper function for cleaner download code
+- Added fetchTextUtf8 helper function for fetching text with proper encoding
+- Added previewTextFile function to preview text/code files in a modal with UTF-8 decoding
+- Added file preview modal HTML with scrollable code display
+- Added file action buttons (download + preview) for non-media files
+- Added CSS for file-actions, file-action-btn, file-preview-box
+- Added send_file function to frost-signal-check.py for uploading files via API
+- Deployed to Cloudflare Pages via git push
+
+Stage Summary:
+- Chinese encoding fix: forceDownload now uses TextDecoder("utf-8") to properly decode Chinese text
+- Text file preview: new "预览" button shows file content in modal with correct UTF-8 encoding
+- Download buttons: explicit "下载" button for all files, "下载图片"/"下载视频" for media
+- Python send_file: new command to upload files with proper binary handling
+- Deployed to frostline.pages.dev
+
