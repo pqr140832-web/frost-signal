@@ -913,13 +913,23 @@ def main():
     opt_wmae, opt_ge = eval_weights_weighted(lolo_df, best_weights)
     opt_umae, _ = eval_weights_unweighted(lolo_df, best_weights)
 
-    all_true, all_pred = compute_r2_and_pred(lolo_df, best_weights)
-    r2 = r2_score(all_true, all_pred)
+    # R²只计算测试集涉及组的LOLO点
+    test_lolo_df = lolo_df[lolo_df['group'].isin(TEST_GROUPS)]
+    test_true, test_pred = compute_r2_and_pred(test_lolo_df, best_weights)
+    r2 = r2_score(test_true, test_pred)
+    test_umae = np.mean(np.abs(test_true - test_pred))
 
-    print(f"\n  整体评估 (所有LOLO点):")
+    # 也计算全部组的R²用于参考
+    all_true, all_pred = compute_r2_and_pred(lolo_df, best_weights)
+    r2_all = r2_score(all_true, all_pred)
+
+    print(f"\n  测试集组评估 (dye+paper+shu_red+jade_green+cobalt_blue):")
     print(f"    测试集加权MAE = {opt_wmae:.4f}")
+    print(f"    测试集组MAE   = {test_umae:.4f}")
+    print(f"    测试集组R²    = {r2:.4f}")
+    print(f"  全部组评估:")
     print(f"    简单平均MAE   = {opt_umae:.4f}")
-    print(f"    R2            = {r2:.4f}")
+    print(f"    全部R²        = {r2_all:.4f}")
 
     print(f"\n  各组MAE:")
     for g in TEST_GROUPS + ["other"]:
