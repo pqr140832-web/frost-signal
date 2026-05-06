@@ -1,0 +1,95 @@
+======================================================================
+  颜料老化色差预测 v38
+  强饱和paper + 曙红trimmed cross-sample + 组级n先验
+======================================================================
+
+[数据] 训练集 181 行 | 测试集 37 行
+
+[步骤1] LOLO策略预计算 (12策略)...
+/home/z/my-project/download/v38.py:358: RankWarning: Polyfit may be poorly conditioned
+  n_est = np.polyfit(log_t, log_dE, 1)[0]
+/home/z/my-project/download/v38.py:358: RankWarning: Polyfit may be poorly conditioned
+  n_est = np.polyfit(log_t, log_dE, 1)[0]
+/home/z/my-project/download/v38.py:358: RankWarning: Polyfit may be poorly conditioned
+  n_est = np.polyfit(log_t, log_dE, 1)[0]
+/home/z/my-project/download/v38.py:358: RankWarning: Polyfit may be poorly conditioned
+  n_est = np.polyfit(log_t, log_dE, 1)[0]
+/home/z/my-project/download/v38.py:358: RankWarning: Polyfit may be poorly conditioned
+  n_est = np.polyfit(log_t, log_dE, 1)[0]
+/home/z/my-project/download/v38.py:358: RankWarning: Polyfit may be poorly conditioned
+  n_est = np.polyfit(log_t, log_dE, 1)[0]
+/home/z/my-project/download/v38.py:358: RankWarning: Polyfit may be poorly conditioned
+  n_est = np.polyfit(log_t, log_dE, 1)[0]
+/home/z/my-project/download/v38.py:358: RankWarning: Polyfit may be poorly conditioned
+  n_est = np.polyfit(log_t, log_dE, 1)[0]
+/home/z/my-project/download/v38.py:358: RankWarning: Polyfit may be poorly conditioned
+  n_est = np.polyfit(log_t, log_dE, 1)[0]
+  共 39 个评估点
+
+[步骤2] scipy权重搜索...
+  dye            : wMAE=0.1015, uMAE=0.1503, top={'scaled': np.float64(0.518), 'ind': np.float64(0.198), 'ind_ch_scaled': np.float64(0.168), 'constrained_pow': np.float64(0.021)}
+  paper          : wMAE=0.0575, uMAE=0.1329, top={'max_obs_ratio': np.float64(0.775), 'ratio': np.float64(0.141), 'lin': np.float64(0.076)}
+  shu_red        : wMAE=1.2661, uMAE=0.4780, top={'ratio': np.float64(0.666), 'constrained_pow': np.float64(0.334)}
+  jade_green     : wMAE=0.1871, uMAE=0.1413, top={'cross_sample': np.float64(0.728), 'ratio': np.float64(0.032), 'constrained_pow': np.float64(0.024), 'grp': np.float64(0.024)}
+  cobalt_blue    : wMAE=0.3304, uMAE=0.2495, top={'constrained_pow': np.float64(1.0)}
+
+[步骤3] LOLO评估结果:
+
+  测试集组:
+    wMAE = 2.3738, MAE = 0.2455, R² = 0.9844
+  全部组:
+    MAE = 0.5980, R² = 0.8133
+
+  各组MAE:
+    dye            : MAE=0.1503 (n=5)
+    paper          : MAE=0.1329 (n=4)
+    shu_red        : MAE=0.4780 (n=7)
+    jade_green     : MAE=0.1413 (n=7)
+    cobalt_blue    : MAE=0.2495 (n=7)
+    other          : MAE=1.7733 (n=9)
+
+[步骤4] 测试集预测...
+  范围: [0.6654, 11.5228], 均值: 3.6662
+
+[预测明细]
+  红花染料                 (UV          , t=  5d) [dye        ] -> 9.5218
+  黄檗染料                 (UV          , t=  5d) [dye        ] -> 11.5228
+  黄檗染料                 (humid-_heat , t=  5d) [dye        ] -> 10.3679
+  皮纸1                  (UV          , t= 40d) [paper      ] -> 7.8454
+  皮纸1                  (humid-_heat , t= 40d) [paper      ] -> 6.2216
+  皮纸2                  (UV          , t= 40d) [paper      ] -> 6.2755
+  皮纸2                  (humid-_heat , t= 40d) [paper      ] -> 7.9947
+  苏木染料                 (UV          , t=  5d) [dye        ] -> 9.3432
+  中国画-翡翠绿1             (UV          , t= 30d) [jade_green ] -> 1.4390
+  中国画-翡翠绿2             (UV          , t= 30d) [jade_green ] -> 1.4539
+  中国画-翡翠绿3             (UV          , t= 30d) [jade_green ] -> 1.4935
+  中国画-翡翠绿4             (UV          , t= 30d) [jade_green ] -> 1.4299
+  中国画-翡翠绿5             (UV          , t= 30d) [jade_green ] -> 1.4645
+  中国画-翡翠绿6             (UV          , t= 30d) [jade_green ] -> 1.4491
+  中国画-翡翠绿7             (UV          , t= 30d) [jade_green ] -> 1.4995
+  中国画-钴蓝1              (UV          , t= 30d) [cobalt_blue] -> 0.6654
+  中国画-钴蓝2              (UV          , t= 30d) [cobalt_blue] -> 0.8526
+  中国画-钴蓝3              (UV          , t= 30d) [cobalt_blue] -> 0.7942
+  中国画-钴蓝4              (UV          , t= 30d) [cobalt_blue] -> 0.7032
+  中国画-钴蓝5              (UV          , t= 30d) [cobalt_blue] -> 0.8163
+  中国画-钴蓝7              (UV          , t= 30d) [cobalt_blue] -> 0.8685
+  中国画-钴蓝8              (UV          , t= 30d) [cobalt_blue] -> 0.7879
+  中国画-曙红1              (UV          , t= 30d) [shu_red    ] -> 5.4797
+  中国画-曙红1              (UV          , t= 24d) [shu_red    ] -> 3.8730
+  中国画-曙红2              (UV          , t= 30d) [shu_red    ] -> 3.7972
+  中国画-曙红2              (UV          , t= 24d) [shu_red    ] -> 2.6887
+  中国画-曙红3              (UV          , t= 30d) [shu_red    ] -> 5.6406
+  中国画-曙红3              (UV          , t= 24d) [shu_red    ] -> 3.9585
+  中国画-曙红5              (UV          , t= 30d) [shu_red    ] -> 4.4221
+  中国画-曙红5              (UV          , t= 24d) [shu_red    ] -> 3.1097
+  中国画-曙红6              (UV          , t= 30d) [shu_red    ] -> 2.4481
+  中国画-曙红6              (UV          , t= 24d) [shu_red    ] -> 1.7692
+  中国画-曙红7              (UV          , t= 30d) [shu_red    ] -> 2.1980
+  中国画-曙红7              (UV          , t= 24d) [shu_red    ] -> 1.9468
+  中国画-曙红8              (UV          , t= 30d) [shu_red    ] -> 2.8255
+  中国画-曙红8              (UV          , t= 24d) [shu_red    ] -> 2.0194
+  紫草染料                 (UV          , t=  5d) [dye        ] -> 4.6628
+
+======================================================================
+  v38: R2=0.9844, MAE=0.2455
+======================================================================

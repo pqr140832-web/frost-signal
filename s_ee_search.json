@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://github.com/Kuingsmile/PicList/issues/483",
+    "name": "[Bug]: sm.ms已经更新了s.ee,请问如何解决, 还可以继续使用",
+    "snippet": "Feb 14, 2026 — ... 图片上传sm . ms 总是 上传 失败, 后来经过一系列的排查得知, 它的域名已经更新,原有的网站请求已经发生重大变化,由 sm . ms 的突然更新为 s . ee 的主域名,导致 ...",
+    "host_name": "github.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://s.ee/docs/zh-CN/developers/smms-compatibility",
+    "name": "SM.MS 兼容性",
+    "snippet": "支持的接口 ; POST /api/v2/upload , POST /api/v1/file/upload, 上传图片 ; GET /api/v2/upload_history, GET /api/v1/files, 获取上传历史 ...",
+    "host_name": "s.ee",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://v2ex.com/t/1191839",
+    "name": "SM.MS 迁移至S.EE 公告（重要）",
+    "snippet": "Feb 10, 2026 — 我们目前正在将 SM . MS Lifetime 账户迁移至 S . EE 。 S . EE 由原 SM . MS 开发团队打造，提供更稳定、更现代的服务体验。",
+    "host_name": "v2ex.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.free8.net/thread-291230-1-1.html",
+    "name": "老牌免费图床sm.ms迁移至s.ee - 资源交流",
+    "snippet": "MS API 上传 或修改 在 S . EE 上的新 上传 将使用新的地址，并具备全部功能。 4. API 兼容性. S . EE 仍然支持 SM . MS 兼容 API ： https:// s . ee /docs/developers/ smms -compatibility/",
+    "host_name": "www.free8.net",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://meta.appinn.net/t/topic/81574",
+    "name": "Sm.ms图床现迁移至S.EE - 讨论分享",
+    "snippet": "Feb 11, 2026 — 刚收到邮件， sm . ms 图床现迁移至 S . EE ，由原团队运营。 看了一下 S . EE 的文档，好像不提供免费服务，看来免费稳定的图床平台又要换一家了:joy: 应该是改下 api ...",
+    "host_name": "meta.appinn.net",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  }
+]
