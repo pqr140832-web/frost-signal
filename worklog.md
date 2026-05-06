@@ -153,3 +153,38 @@ Sent to user:
 - predict_out_v34.csv
 
 Submitted to leaderboard: pending
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: 继续优化颜料老化预测模型 v34/v35
+
+Work Log:
+- 分析了现有v28-v33全部代码，理解了版本演进
+- 创建v34：MSE最优权重搜索 + Weibull/Gompertz模型 + 测试集加权LOLO + 偏差修正
+  - 结果：R²=0.927, MAE=0.513 — 反而不如v32(0.960)，权重搜索overfitting
+- 创建v34b：保留v33的proven权重搜索 + 新模型 + 单调性约束 + 曙红7修复
+  - 结果：R²=0.959, MAE=0.382 — 与v32持平
+  - 修复了曙红7异常预测（0.017→1.33）
+- 创建v35：测试集感知权重调整
+  - 关键洞察：paper组LOLO用2个数据点(t=3,7)，但测试有3个(t=3,7,15)
+  - Paper测试权重调整为：grp 0.30 + ind 0.25 + ch 0.15 + lin 0.10
+  - LOLO评估与v34b相同(R²=0.959)
+- 发现v32曙红预测严重偏低(~0.2)，是一个bug（搜索权重ch_scaled过高）
+- 生成多个ensemble：super_v2(排除v32)、v14+v35混合
+
+Stage Summary:
+- 推荐提交顺序：
+  1. predict_out_super_v2.csv（排除v32的5版本平均）
+  2. predict_out_v35.csv（最新改进版）
+  3. predict_out_0.3v14_0.7v35.csv（v14+最新混合）
+- LOLO最优指标：R²≈0.959, MAE≈0.38
+- 新增模型：Weibull增长、Gompertz增长
+- 曙红7异常修复成功
+
+Key Files:
+- /home/z/my-project/download/v34b.py
+- /home/z/my-project/download/v35.py
+- /home/z/my-project/download/predict_out_v35.csv
+- /home/z/my-project/download/predict_out_super_v2.csv
+- /home/z/my-project/download/predict_out_0.3v14_0.7v35.csv
