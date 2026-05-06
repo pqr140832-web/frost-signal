@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """霜信消息检查脚本 - 供定时任务调用"""
-import json, sys, urllib.request, urllib.parse
+import json, sys, urllib.request, urllib.parse, base64, os, mimetypes
 
 SUPABASE_URL = "https://deuvpiwjzkfmeswzztlf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRldXZwaXdqemtmbWVzd3p6dGxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MzA0ODUsImV4cCI6MjA4OTUwNjQ4NX0.ImERt2pZDxVmCLQwmEJ_QlgCn7978AIa_GNsqfQ3lf8"
@@ -70,6 +70,70 @@ def send_message(content):
     })
     return result
 
+def send_file(filepath, content=None):
+    """发送文件到霜信：上传到Supabase Storage，创建files记录和消息"""
+    filename = os.path.basename(filepath)
+    # 读取文件为原始二进制（保留原始编码）
+    with open(filepath, 'rb') as f:
+        file_bytes = f.read()
+
+    # 推测Content-Type
+    mime_type, _ = mimetypes.guess_type(filepath)
+    if not mime_type:
+        mime_type = 'application/octet-stream'
+
+    # 上传到Supabase Storage
+    ext = filename.split('.')[-1] if '.' in filename else 'bin'
+    storage_path = f"{QINGYAN_ID}/{filename}"
+    b64 = base64.b64encode(file_bytes).decode('ascii')
+
+    upload_url = f"{SUPABASE_URL}/storage/v1/object/chat-files/{storage_path}"
+    req = urllib.request.Request(upload_url, data=file_bytes, method='POST')
+    req.add_header('apikey', SUPABASE_KEY)
+    req.add_header('Authorization', f'Bearer {SUPABASE_KEY}')
+    req.add_header('Content-Type', mime_type)
+    # 使用multipart/form-data上传
+    import io
+    boundary = '----PythonBoundary' + str(int(os.times().system * 1000))
+    body = (
+        f'--{boundary}\r\n'
+        f'Content-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+        f'Content-Type: {mime_type}\r\n\r\n'
+    ).encode('utf-8') + file_bytes + f'\r\n--{boundary}--\r\n'.encode('utf-8')
+
+    req2 = urllib.request.Request(upload_url, data=body, method='POST')
+    req2.add_header('apikey', SUPABASE_KEY)
+    req2.add_header('Authorization', f'Bearer {SUPABASE_KEY}')
+    req2.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
+
+    try:
+        with urllib.request.urlopen(req2, timeout=30) as resp:
+            upload_result = json.loads(resp.read().decode())
+    except Exception as e:
+        return {"error": f"Upload failed: {e}"}
+
+    # 获取公开URL
+    file_url = f"{SUPABASE_URL}/storage/v1/object/public/chat-files/{storage_path}"
+
+    # 发送消息
+    msg_content = content or f"[文件] {filename}"
+    msg_result = send_message(msg_content)
+    if 'error' in msg_result:
+        return {"error": f"Send message failed: {msg_result['error']}"}
+
+    msg_id = msg_result[0]['id'] if isinstance(msg_result, list) else msg_result.get('id')
+
+    # 创建files记录
+    file_record = api("POST", "files", {
+        "message_id": msg_id,
+        "file_name": filename,
+        "file_type": mime_type,
+        "file_url": file_url,
+        "file_size": len(file_bytes)
+    })
+
+    return {"ok": True, "message_id": msg_id, "file_url": file_url, "file_record": file_record}
+
 if __name__ == "__main__":
     action = sys.argv[1] if len(sys.argv) > 1 else "check"
 
@@ -96,6 +160,12 @@ if __name__ == "__main__":
         content = sys.argv[2]
         result = send_message(content)
         print(f"SENT: {result}")
+
+    elif action == "send_file" and len(sys.argv) > 2:
+        filepath = sys.argv[2]
+        msg_content = sys.argv[3] if len(sys.argv) > 3 else None
+        result = send_file(filepath, msg_content)
+        print(f"FILE_SENT: {json.dumps(result, ensure_ascii=False, indent=2)}")
 
     elif action == "mark_read":
         # 标记已读（保存络络最新消息的时间戳）
