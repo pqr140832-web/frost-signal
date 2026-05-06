@@ -14,13 +14,17 @@ def api(method, path, body=None):
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
     }
     data = json.dumps(body).encode() if body else None
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
-            return json.loads(resp.read().decode())
+            raw = resp.read().decode()
+            if raw:
+                return json.loads(raw)
+            return {"ok": True}
     except Exception as e:
         return {"error": str(e)}
 
@@ -57,7 +61,7 @@ def send_message(content):
         "content": content
     })
     # 更新对话时间戳
-    api("PATCH", f"conversations?id=eq.{CONV_ID}", {"updated_at": __import__('datetime').datetime.utcnow().isoformat() + "Z"})
+    api("PATCH", f"conversations?id=eq.{CONV_ID}", {"updated_at": __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat().replace('+00:00','Z')})
     return result
 
 if __name__ == "__main__":
