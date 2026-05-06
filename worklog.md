@@ -220,3 +220,43 @@ Stage Summary:
 - 建议提交方案：1) v34原版 2) 0.7v34+0.3v36 ensemble
 - 文件: v36.py, v36b.py, predict_out_v36.csv, predict_out_v34_v36_*.csv
 
+---
+Task ID: 2
+Agent: v40 developer
+Task: Create v40 based on v14 with conservative improvements
+
+Work Log:
+- Read v14.py and analyzed architecture (HierarchicalModel, ChannelModel, PerSampleBestModel, HumidHeatModel, V14Ensemble)
+- Created v40.py with all v14 base code preserved exactly
+- Renamed V14Ensemble → V40Ensemble with these conservative changes:
+  1. Added RatioExtrapolation strategy for shu_red (individual growth ratio from t=12→t=18)
+  2. Changed paper weights: 60% per_sample + 25% hier + 15% channel (was 50/50 per_sample+hier)
+  3. Changed shu_red (len<=2): 30% hier + 30% channel + 40% ratio (was 40% hier + 60% channel)
+  4. Added physical upper bound constraints per group (dye x3, paper x4, shu_red x3, jade_green x2.5, cobalt_blue x2.5)
+  5. Added LOLO (Leave-One-Timepoint-Out) evaluation
+  6. Added detailed v40 vs v14 prediction comparison
+- Updated file paths to /home/z/my-project/upload/ for train/test, /home/z/my-project/download/ for output
+- Ran v40.py successfully
+
+Stage Summary:
+- v40 LOLO metrics: R²=0.9147, MAE=0.6687, RMSE=0.9332, n=51
+- v40 Forward eval: R²=0.9887, MAE=0.1843, RMSE=0.2889, n=39
+- v40 predictions vs v14 (unchanged groups kept identical):
+  - dye: 0.0000 diff (identical, as designed)
+  - paper: +0.0556 mean diff (皮纸1 UV: 7.31→7.58, 皮纸2 UV: 5.00→4.96)
+  - shu_red: +0.2610 mean diff (ratio extrapolation shifts predictions up for some, down for others)
+    - 曙红5 UV 30d: +2.22 (most aggressive, individual ratio=2.51)
+    - 曙红3 UV 30d: +0.91
+    - 曙红7 UV 30d: -0.53 (individual ratio=0.67, declining trend)
+  - jade_green: 0.0000 diff (identical, as designed)
+  - cobalt_blue: 0.0000 diff (identical, as designed)
+  - Overall: v40 mean=3.8054, v14 mean=3.7006, diff=+0.1048
+  - MAE_diff=0.1876, RMSE_diff=0.4424
+- Physical upper bounds were NOT triggered (no predictions exceeded bounds)
+- Key concern: 曙红5 ratio=2.5067 is very aggressive, capping at 2.0 may be needed
+- File: /home/z/my-project/download/predict_out_v40.csv
+
+Key Files:
+- /home/z/my-project/download/v40.py
+- /home/z/my-project/download/predict_out_v40.csv
+
