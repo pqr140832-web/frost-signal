@@ -1,12 +1,11 @@
 """
 颜料老化色差预测 - v28
-改进v14弱组 + 加权集成
+改进v14弱组 + 稳健组模型
 
 核心改进：
 1. 对噪声大的组(钴蓝/翡翠绿)使用中位数池化+稳健回归
 2. 对曙红使用更好的组级增长率估计
-3. 对每个样本使用LOLO-CV选择最优策略
-4. 与v14做加权集成
+3. 对other组使用保守的候选平均策略
 """
 
 import warnings
@@ -15,7 +14,7 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from scipy.optimize import minimize_scalar, curve_fit
+from scipy.optimize import minimize_scalar
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -33,23 +32,10 @@ def detect_group(sample: str) -> str:
         return "dye"
     return "other"
 
-# ===================== 数据准备 =====================
 def prepare_series(df_sub):
     agg = df_sub.groupby("aging_time_day").agg({TARGET: "mean"}).reset_index()
     agg = agg[agg["aging_time_day"] > 0].sort_values("aging_time_day")
     return agg["aging_time_day"].values.astype(float), agg[TARGET].values.astype(float)
-
-def prepare_channels(df_sub):
-    agg = df_sub.groupby("aging_time_day").agg({
-        "L": "mean", "a": "mean", "b": "mean",
-        "L0": "first", "a0": "first", "b0": "first"
-    }).reset_index()
-    agg = agg[agg["aging_time_day"] > 0].sort_values("aging_time_day")
-    t = agg["aging_time_day"].values.astype(float)
-    dL = (agg["L"] - agg["L0"]).values.astype(float)
-    da = (agg["a"] - agg["a0"]).values.astype(float)
-    db = (agg["b"] - agg["b0"]).values.astype(float)
-    return t, dL, da, db
 
 def remove_outliers(t, y, threshold=2.5):
     t = np.asarray(t, dtype=float)
@@ -66,9 +52,8 @@ def remove_outliers(t, y, threshold=2.5):
             keep[i] = False
     return t[keep], y[keep]
 
-
-# ===================== 生长模型库 =====================
-def fit_power_law(t, y, n_range=(0.05, 3.0)):
+# ===================== 生长模型 =====================
+def fit_power_law(t, y):
     mask = (t > 0) & (y > 0)
     if mask.sum() < 2:
         return None
@@ -80,7 +65,7 @@ def fit_power_law(t, y, n_range=(0.05, 3.0)):
         ss_res = np.sum((y - pred) ** 2)
         ss_tot = np.sum((y - y.mean()) ** 2)
         return -(1 - ss_res / (ss_tot + 1e-9))
-    res = minimize_scalar(neg_r2, bounds=n_range, method="bounded")
+    res = minimize_scalar(neg_r2, bounds=(0.05, 3.0), method="bounded")
     best_n = res.x
     tn = np.power(t, best_n)
     A = np.dot(tn, y) / (np.dot(tn, tn) + 1e-9)
@@ -119,6 +104,29 @@ def fit_log(t, y):
     A = np.dot(tk, y) / (np.dot(tk, tk) + 1e-9)
     return {"type": "log", "A": A, "k": k, "score": -res.fun}
 
+def fit_mm(t, y):
+    """Michaelis-Menten: y = A*t/(B+t) 饱和曲线"""
+    mask = (t > 0) & (y > 0)
+    if mask.sum() < 3:
+        return None
+    t, y = t[mask], y[mask]
+    try:
+        from scipy.optimize import curve_fit
+        t_max = t.max()
+        y_max = y.max()
+        t_norm = t / t_max
+        def mm(tn, A, B):
+            return A * tn / (B + tn)
+        popt, _ = curve_fit(mm, t_norm, y / y_max, p0=[1.0, 0.5], maxfev=5000)
+        A, B = popt
+        pred = y_max * mm(t_norm, A, B)
+        ss_res = np.sum((y - pred) ** 2)
+        ss_tot = np.sum((y - y.mean()) ** 2)
+        score = 1 - ss_res / (ss_tot + 1e-9)
+        return {"type": "mm", "A": A * y_max, "B": B * t_max, "score": score}
+    except:
+        return None
+
 def predict_model(model, t_pred):
     if model is None:
         return None
@@ -128,10 +136,12 @@ def predict_model(model, t_pred):
         return max(model["a"] + model["b"] * t_pred, 0)
     elif model["type"] == "log":
         return model["A"] * np.log(1 + model["k"] * t_pred)
+    elif model["type"] == "mm":
+        return max(model["A"] * t_pred / (model["B"] + t_pred), 0)
     return None
 
 def best_model(t, y, min_score=-1.0):
-    models = [fit_power_law(t, y), fit_log(t, y), fit_linear(t, y)]
+    models = [fit_power_law(t, y), fit_log(t, y), fit_linear(t, y), fit_mm(t, y)]
     models = [m for m in models if m is not None and m.get("score", -999) > min_score]
     if not models:
         return None
@@ -140,19 +150,16 @@ def best_model(t, y, min_score=-1.0):
 
 # ===================== 稳健组级模型 =====================
 class RobustGroupModel:
-    """使用稳健统计的组级模型"""
-
     def __init__(self, df_train):
         self.group_models = {}
-        self.group_medians = {}  # 每个时间点的组中位数dE
-        self.group_channel_medians = {}  # 每个时间点的通道中位数
+        self.group_medians = {}
+        self.group_channel_medians = {}
         self._build(df_train)
 
     def _build(self, df_train):
         for group in ["dye", "paper", "shu_red", "jade_green", "cobalt_blue", "other"]:
             members = [s for s in df_train["sample"].unique() if detect_group(s) == group]
             for cond in ["UV", "humid-_heat"]:
-                # 收集组级时间序列(中位数)
                 time_data = {}
                 channel_data = {}
                 for m in members:
@@ -163,7 +170,6 @@ class RobustGroupModel:
                         if t not in time_data:
                             time_data[t] = []
                         time_data[t].append(row[TARGET])
-
                         if t not in channel_data:
                             channel_data[t] = {"dL": [], "da": [], "db": []}
                         channel_data[t]["dL"].append(row["L"] - row["L0"])
@@ -179,13 +185,10 @@ class RobustGroupModel:
 
                 key = f"{group}_{cond}"
                 self.group_medians[key] = {"times": medians_t, "medians": medians_y}
-
-                # 对组中位数拟合模型
                 model = best_model(medians_t, medians_y)
                 if model:
                     self.group_models[key] = model
 
-                # 通道中位数
                 ch_times = sorted(channel_data.keys())
                 ch_meds = {t: {
                     "dL": np.median(channel_data[t]["dL"]),
@@ -195,28 +198,23 @@ class RobustGroupModel:
                 self.group_channel_medians[key] = ch_times, ch_meds
 
     def predict_group_dE(self, group, cond, t_pred):
-        """组级模型预测dE"""
         key = f"{group}_{cond}"
         if key in self.group_models:
             return predict_model(self.group_models[key], t_pred)
         return None
 
     def predict_group_channel_dE(self, group, cond, t_pred):
-        """通过组级通道中位数计算dE"""
         key = f"{group}_{cond}"
         if key not in self.group_channel_medians:
             return None
         times, ch_meds = self.group_channel_medians[key]
         if not times:
             return None
-
-        # 找最近的通道数据
         if t_pred <= times[0]:
             ch = ch_meds[times[0]]
         elif t_pred >= times[-1]:
             ch = ch_meds[times[-1]]
         else:
-            # 线性插值
             for i in range(len(times) - 1):
                 if times[i] <= t_pred <= times[i+1]:
                     frac = (t_pred - times[i]) / (times[i+1] - times[i])
@@ -226,15 +224,12 @@ class RobustGroupModel:
                     break
             else:
                 ch = ch_meds[times[-1]]
-
         dE = np.sqrt(ch["dL"]**2 + ch["da"]**2 + ch["db"]**2)
         return float(max(dE, 0))
 
 
 # ===================== 主预测器 =====================
 class V28Predictor:
-    """v28主预测器"""
-
     def __init__(self, df_train):
         self.df_train = df_train
         self.robust_model = RobustGroupModel(df_train)
@@ -242,7 +237,6 @@ class V28Predictor:
         self._build_sample_models(df_train)
 
     def _build_sample_models(self, df_train):
-        """对每个样本单独拟合模型"""
         for sample in df_train["sample"].unique():
             for cond in df_train[df_train["sample"] == sample]["aging_condition"].unique():
                 sub = df_train[(df_train["sample"] == sample) & (df_train["aging_condition"] == cond)]
@@ -263,7 +257,6 @@ class V28Predictor:
                 }
 
     def predict(self, sample, cond, t_pred):
-        """综合预测"""
         group = detect_group(sample)
         sub = self.df_train[
             (self.df_train["sample"] == sample) &
@@ -301,29 +294,21 @@ class V28Predictor:
         # 策略5: 个体缩放的组模型
         p_scaled_group = None
         if p_group is not None and len(tc) >= 1:
-            # 用个体的最后一个已知dE/组均值 作为缩放因子
             group_median_key = f"{group}_{cond}"
             if group_median_key in self.robust_model.group_medians:
                 gmedians = self.robust_model.group_medians[group_median_key]
-                # 找最近的组时间点
-                nearest_t = gmedians["times"][np.argmin(np.abs(gmedians["times"] - tc[-1]))]
                 group_val_at_t = gmedians["medians"][np.argmin(np.abs(gmedians["times"] - tc[-1]))]
                 if group_val_at_t > 0.01:
                     scale = dEc[-1] / group_val_at_t
                     p_scaled_group = p_group * scale
 
-        # 按组选择策略
         return self._select_strategy(group, tc, dEc, t_pred,
                                      p_individual, p_group, p_channel,
                                      p_linear, p_scaled_group)
 
     def _select_strategy(self, group, t_train, dE_train, t_pred,
                          p_ind, p_grp, p_ch, p_lin, p_scaled):
-        """按组选择最优策略"""
-
         if group == "cobalt_blue":
-            # 钴蓝：噪声极大，dE很小且不稳定
-            # 使用组通道分解 + 保守估计
             if p_ch is not None and p_grp is not None:
                 return 0.5 * p_ch + 0.3 * p_grp + 0.2 * (p_scaled if p_scaled is not None else p_grp)
             elif p_ch is not None:
@@ -333,7 +318,6 @@ class V28Predictor:
             return p_lin if p_lin is not None else 0.5
 
         if group == "jade_green":
-            # 翡翠绿：数据少(3个非零点)，但有组内模式
             if p_scaled is not None and p_ch is not None:
                 return 0.4 * p_scaled + 0.3 * p_ch + 0.3 * (p_ind if p_ind is not None else p_grp)
             elif p_ind is not None and p_grp is not None:
@@ -341,10 +325,7 @@ class V28Predictor:
             return p_ind if p_ind is not None else p_grp
 
         if group == "shu_red":
-            # 曙红：只有2个非零数据点，个体外推不可靠
-            # 使用组级模型 + 个体缩放
             if p_scaled is not None:
-                # 有缩放的组模型
                 if p_ind is not None:
                     return 0.6 * p_scaled + 0.4 * p_ind
                 return p_scaled
@@ -355,62 +336,52 @@ class V28Predictor:
             return p_grp if p_grp is not None else p_lin
 
         if group == "dye":
-            # 染料：数据多，个体模型应该很准
             if p_ind is not None:
-                score = p_ind  # just use individual
                 if p_grp is not None:
                     return 0.8 * p_ind + 0.2 * p_grp
                 return p_ind
             return p_grp if p_grp is not None else p_lin
 
         if group == "paper":
-            # 皮纸：线性趋势明显
             if p_lin is not None and p_ind is not None:
                 return 0.4 * p_lin + 0.3 * p_ind + 0.3 * (p_grp if p_grp is not None else p_ind)
             elif p_lin is not None:
                 return p_lin
             return p_ind if p_ind is not None else p_grp
 
-        # 默认
+        # 默认(other组)
         candidates = [p for p in [p_ind, p_grp, p_ch, p_lin, p_scaled] if p is not None]
         return np.mean(candidates) if candidates else 0.0
 
 
 # ===================== 前向评估 =====================
 def true_lolo_eval(df_train):
-    """真正的leave-last-out前向评估"""
     y_true, y_pred = [], []
     details = []
-
     for sample in df_train["sample"].unique():
         for cond in df_train[df_train["sample"] == sample]["aging_condition"].unique():
             sub = df_train[
                 (df_train["sample"] == sample) &
                 (df_train["aging_condition"] == cond)
             ].sort_values("aging_time_day")
-
             if len(sub) < 3:
                 continue
-
             last_t = sub["aging_time_day"].max()
             train_df = df_train[~(
                 (df_train["sample"] == sample) &
                 (df_train["aging_condition"] == cond) &
                 (df_train["aging_time_day"] == last_t)
             )]
-
             predictor = V28Predictor(train_df)
             test_row = sub[sub["aging_time_day"] == last_t].iloc[-1]
-
             pred = predictor.predict(sample, cond, float(test_row["aging_time_day"]))
             y_true.append(test_row[TARGET])
-            y_pred.append(pred)
+            y_pred.append(float(pred))
             details.append({
                 "sample": sample, "group": detect_group(sample),
                 "cond": cond, "t": float(test_row["aging_time_day"]),
-                "y_true": test_row[TARGET], "y_pred": pred,
+                "y_true": test_row[TARGET], "y_pred": float(pred),
             })
-
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     return {
@@ -422,62 +393,45 @@ def true_lolo_eval(df_train):
     }
 
 
-# ===================== 主程序 =====================
 def main():
     print("=" * 60)
     print("  颜料老化色差预测 v28")
     print("  稳健组模型 + 改进弱组")
     print("=" * 60)
-
     df_train = pd.read_csv(TRAIN_CSV, encoding="utf-8")
     df_test = pd.read_csv(TEST_CSV, encoding="utf-8")
     print(f"\n[数据] 训练集 {len(df_train)} 行 | 测试集 {len(df_test)} 行")
 
-    # 真LOLO评估
-    print("\n[评估] 真正的leave-last-out评估...")
+    print("\n[评估] 真LOLO评估...")
     metrics = true_lolo_eval(df_train)
-    print(f"  有效序列数: {metrics['n']}")
-    print(f"  R²   = {metrics['R2']:.4f}")
-    print(f"  MAE  = {metrics['MAE']:.4f}")
-    print(f"  RMSE = {metrics['RMSE']:.4f}")
+    print(f"  n={metrics['n']}, R²={metrics['R2']:.4f}, MAE={metrics['MAE']:.4f}")
 
-    # 按组评估
-    print("\n[评估] 按组详细:")
-    for g in ["dye", "paper", "shu_red", "jade_green", "cobalt_blue"]:
-        gdetails = [d for d in metrics["details"] if d["group"] == g]
-        if len(gdetails) >= 2:
-            yt = np.array([d["y_true"] for d in gdetails])
-            yp = np.array([d["y_pred"] for d in gdetails])
-            r2 = r2_score(yt, yp)
-            mae = mean_absolute_error(yt, yp)
-            print(f"  {g:15s}: R²={r2:+.4f}, MAE={mae:.4f}, n={len(gdetails)}")
+    print("\n[评估] 按组:")
+    for g in ["dye", "paper", "shu_red", "jade_green", "cobalt_blue", "other"]:
+        gd = [d for d in metrics["details"] if d["group"] == g]
+        if len(gd) >= 2:
+            yt = np.array([d["y_true"] for d in gd])
+            yp = np.array([d["y_pred"] for d in gd])
+            print(f"  {g:15s}: R²={r2_score(yt, yp):+.4f}, MAE={mean_absolute_error(yt, yp):.4f}, n={len(gd)}")
 
-    # 测试集预测(用全数据)
-    print("\n[预测] 生成测试集预测(全数据)...")
+    print("\n[预测] 测试集...")
     predictor = V28Predictor(df_train)
-
     test_preds = []
     for _, row in df_test.iterrows():
         pred = predictor.predict(row["sample"], row["aging_condition"], float(row["aging_time_day"]))
-        test_preds.append(pred)
+        test_preds.append(float(max(pred, 0)))
 
-    test_preds = np.array(test_preds, dtype=float)
-    print(f"  预测范围: [{test_preds.min():.4f}, {test_preds.max():.4f}]")
-    print(f"  预测均值: {test_preds.mean():.4f}")
+    test_preds = np.array(test_preds)
+    print(f"  范围: [{test_preds.min():.4f}, {test_preds.max():.4f}], 均值: {test_preds.mean():.4f}")
 
     OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame({TARGET: test_preds}).to_csv(OUT_CSV, index=False)
-    print(f"\n[完成] 已保存: {OUT_CSV}")
+    print(f"\n[完成] {OUT_CSV}")
 
-    print("\n[预测明细]")
     for i, (_, row) in enumerate(df_test.iterrows()):
-        print(f"  {row['sample']:20s} ({row['aging_condition']:12s}, t={row['aging_time_day']:3.0f}d)"
-              f"  →  {test_preds[i]:.4f}")
+        print(f"  {row['sample']:20s} ({row['aging_condition']:12s}, t={row['aging_time_day']:3.0f}d) → {test_preds[i]:.4f}")
 
-    print("\n" + "=" * 60)
-    print(f"  v28 真LOLO: R²={metrics['R2']:.4f}, MAE={metrics['MAE']:.4f}")
-    print(f"  v14 参考: R²=0.9784, MAE=0.2906 (非LOLO)")
-    print("=" * 60)
+    print(f"\nv28 LOLO: R²={metrics['R2']:.4f}, MAE={metrics['MAE']:.4f}")
 
 
 if __name__ == "__main__":
