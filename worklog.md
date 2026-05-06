@@ -2,32 +2,52 @@
 
 ## 2026-05-06 Session
 
-### Task: Improve paint aging prediction model (v13 score=61.9, first place=73)
+### Task: Improve paint aging prediction model (v13 score=61.9 → v14 score=63.02, first place=73)
 
-### Analysis Summary
-- Reviewed all existing code: v13 (best, 61.9), v14 (never submitted), v15 (never submitted)
-- v13 uses hierarchical group model + v12 power-law hybrid
-- v14 uses color channel decomposition (ΔL, Δa, Δb) + multi-strategy ensemble
+### Previous Session Summary
+- v13=61.9 (only submitted), v14 never submitted, v17=57.55 (submitted), v18 never submitted
+- v14 has best local metrics (R²=0.9879, MAE=0.1975) but LOLO eval shows it's not that good
+- User submitted v14 → scored 63.02 (improvement of +1.12)
+
+### This Session - Key Analysis
+- Baseline uses RandomForest with 4 features (aging_time_day, L0, a0, b0)
+- First place is 73, second place is 70+
+- Training data: 181 rows, 37 test rows
+- Test set requires extrapolation (e.g., jade_green trains to t=24, test needs t=30)
+
+### True LOLO (Leave-Last-Out) Evaluation
+- **v14 true LOLO**: R²=0.846, MAE=0.859
+  - dye: MAE=0.489 (good)
+  - paper: MAE=0.663 (ok)
+  - shu_red: MAE=1.179 (BAD - underestimates)
+  - jade_green: MAE=0.317 (ok)
+  - cobalt_blue: MAE=1.327 (BAD - very unstable)
 
 ### Versions Created This Session
-1. **v24.py**: Replaced v13's fixed params with auto-optimized ones + 远距离保护 → MAE=0.305 (worse than v13)
-2. **v24b.py**: v13 base + 曙红 enhanced model → MAE=0.308 (worse, 曙红 model overpredicts)
-3. **v24c.py**: v13 base + weight re-search → MAE=0.287 (marginal improvement, 0.0034 better)
-4. **v25.py**: Full parameter search (ws, n, w_hier) → MAE=1.08 (broken for 曙红 and other groups)
+1. **v26.py**: ML-based (XGBoost/LightGBM/CatBoost) + feature engineering + v14 ensemble
+   - Local eval MAE=0.44 (but uses in-sample evaluation, misleading)
+   - Too few data (181 rows) for ML to generalize well
 
-### Key Discovery
-**v14 was NEVER submitted!** v14's forward eval:
-- R²=0.9879 (v13: 0.9784)
-- MAE=0.1975 (v13: 0.2906)
-- Better in EVERY group: dye 0.070 vs 0.390, paper 0.060 vs 0.080, shu_red 0.224 vs 0.409, jade_green 0.092 vs 0.128, cobalt_blue 0.240 vs 0.268
+2. **v27.py**: Color channel time series prediction (predict L/a/b then compute dE)
+   - In-sample MAE=0.113 (but uses full training data, misleading)
+   - True LOLO: R²=-91.6, MAE=9.44 (COMPLETE FAILURE)
+   - Small L/a/b prediction errors get amplified when computing dE
 
-If competition scoring scales linearly with MAE, v14's MAE=0.198 would correspond to ~73 points (first place level).
+3. **v28.py**: Robust group model with improved weak groups
+   - True LOLO: R²=0.918, MAE=0.626 (BIG improvement over v14's 0.859!)
+   - cobalt_blue: MAE 1.327→0.277 (massive improvement)
+   - shu_red: MAE 1.179→0.781 (significant improvement)
+   - jade_green: MAE 0.317→0.328 (slightly worse)
+   - paper: MAE 0.663→0.671 (slightly worse)
+   - dye: MAE 0.489→0.665 (worse)
+   - Key insight: v28 uses robust median pooling for noisy groups (cobalt_blue)
 
-### Files Prepared
-- `/home/z/my-project/upload/predict_out.csv` → v14 predictions
-- `/home/z/my-project/download/predict_out_v13.csv` → v13 backup
-- `/home/z/my-project/download/predict_out_v14.csv` → v14 predictions
-- `/home/z/my-project/download/predict_out_ensemble.csv` → v13+v14 average
+### Prediction Files Ready
+- `/home/z/my-project/upload/predict_out_v28.csv` → v28 pure predictions
+- `/home/z/my-project/upload/predict_out_v14_v28_w0.3.csv` → 30% v14 + 70% v28
+- `/home/z/my-project/upload/predict_out_v14_v28_w0.5.csv` → 50/50 ensemble
+- `/home/z/my-project/upload/predict_out_v14_v28_w0.7.csv` → 70% v14 + 30% v28
 
-### Conclusion
-v13's parameters are near-optimal. The biggest opportunity is submitting v14 which was previously overlooked. Recommend submitting v14 predictions first, fall back to ensemble if v14 underperforms.
+### Recommendation
+Try v28 first (best LOLO metrics), then try 50/50 ensemble if v28 underperforms.
+The main improvement is in cobalt_blue and shu_red groups which were v14's biggest weaknesses.
