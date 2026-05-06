@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """霜信消息检查脚本 - 供定时任务调用"""
-import json, sys, urllib.request
+import json, sys, urllib.request, urllib.parse
 
 SUPABASE_URL = "https://deuvpiwjzkfmeswzztlf.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRldXZwaXdqemtmbWVzd3p6dGxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MzA0ODUsImV4cCI6MjA4OTUwNjQ4NX0.ImERt2pZDxVmCLQwmEJ_QlgCn7978AIa_GNsqfQ3lf8"
@@ -41,9 +41,17 @@ def save_last_check(ts):
 
 def check_new_messages():
     last = get_last_check()
-    path = f"messages?select=id,sender_id,content,created_at&conversation_id=eq.{CONV_ID}&sender_id=eq.{LUOLUO_ID}&order=created_at.desc&limit=20"
+    params = {
+        "select": "id,sender_id,content,created_at",
+        "conversation_id": f"eq.{CONV_ID}",
+        "sender_id": f"eq.{LUOLUO_ID}",
+        "order": "created_at.desc",
+        "limit": "20"
+    }
     if last:
-        path += f"&created_at=gt.{last}"
+        params["created_at"] = f"gt.{last}"
+    query = urllib.parse.urlencode(params, quote_via=urllib.parse.quote)
+    path = f"messages?{query}"
     return api("GET", path)
 
 def get_recent_context(n=10):
@@ -60,8 +68,6 @@ def send_message(content):
         "sender_id": QINGYAN_ID,
         "content": content
     })
-    # 更新对话时间戳
-    api("PATCH", f"conversations?id=eq.{CONV_ID}", {"updated_at": __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat().replace('+00:00','Z')})
     return result
 
 if __name__ == "__main__":
@@ -74,7 +80,7 @@ if __name__ == "__main__":
             for m in msgs:
                 sender = "络络" if m["sender_id"] == LUOLUO_ID else "清言"
                 print(f"  [{m['created_at']}] {sender}: {m['content']}")
-            # 更新最后检查时间
+            # 保存最新消息的时间戳（msgs[0]是最新的因为order=desc）
             save_last_check(msgs[0]["created_at"])
         else:
             print("NO_NEW_MESSAGES")
@@ -92,8 +98,8 @@ if __name__ == "__main__":
         print(f"SENT: {result}")
 
     elif action == "mark_read":
-        # 标记已读（更新最后检查时间为当前时间）
-        msgs = api("GET", f"messages?select=created_at&conversation_id=eq.{CONV_ID}&order=created_at.desc&limit=1")
+        # 标记已读（保存络络最新消息的时间戳）
+        msgs = api("GET", f"messages?select=created_at&conversation_id=eq.{CONV_ID}&sender_id=eq.{LUOLUO_ID}&order=created_at.desc&limit=1")
         if isinstance(msgs, list) and len(msgs) > 0:
             save_last_check(msgs[0]["created_at"])
             print(f"MARKED: {msgs[0]['created_at']}")
