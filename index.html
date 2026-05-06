@@ -389,6 +389,11 @@
     }
     .media-download-btn:hover { background: rgba(255,255,255,0.16); }
     .media-download-btn svg { width: 14px; height: 14px; }
+    .file-download-icon {
+      width: 20px; height: 20px; flex-shrink: 0; color: var(--accent2); opacity: 0.7;
+      transition: opacity 0.15s;
+    }
+    .file-attach:hover .file-download-icon { opacity: 1; }
 
     .img-attach {
       max-width: 220px;
@@ -398,6 +403,23 @@
       cursor: pointer;
       display: block;
       margin-top: 4px;
+    }
+    .file-actions {
+      display: flex; gap: 4px; margin-top: 4px;
+    }
+    .file-action-btn {
+      display: flex; align-items: center; gap: 4px; padding: 4px 10px;
+      background: rgba(255,255,255,0.08); border: none; border-radius: var(--radius-xs);
+      color: var(--text2); font-size: 11px; cursor: pointer; transition: background 0.15s;
+    }
+    .file-action-btn:hover { background: rgba(255,255,255,0.16); color: var(--text); }
+    .file-action-btn svg { width: 13px; height: 13px; }
+    .file-preview-box {
+      max-height: 300px; overflow: auto; margin-top: 6px; padding: 8px 10px;
+      background: rgba(0,0,0,0.3); border-radius: var(--radius-xs);
+      font-family: var(--mono); font-size: 11.5px; line-height: 1.5;
+      white-space: pre-wrap; word-break: break-all; color: var(--text2);
+      cursor: text; user-select: text;
     }
 
     /* ── INPUT AREA ── */
@@ -823,6 +845,20 @@
 <div id="lightbox">
   <button id="lightbox-close">✕</button>
   <img id="lightbox-img" src="" alt="">
+</div>
+
+<!-- Modal: File Preview -->
+<div class="modal-bg" id="file-preview-modal">
+  <div class="modal" style="max-width:640px;max-height:85vh;display:flex;flex-direction:column;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <h2 id="preview-filename" style="font-size:14px;word-break:break-all"></h2>
+      <button class="icon-btn" onclick="closeModal('file-preview-modal')" style="font-size:16px">✕</button>
+    </div>
+    <pre id="preview-content" style="flex:1;overflow:auto;background:var(--bg);padding:12px;border-radius:8px;font-size:12px;font-family:var(--mono);white-space:pre-wrap;word-break:break-all;color:var(--text);min-height:100px;max-height:60vh;border:1px solid var(--border)"></pre>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn btn-primary" id="preview-download-btn">下载文件</button>
+    </div>
+  </div>
 </div>
 
 <!-- Modal: Login/Register -->
@@ -1328,9 +1364,9 @@ function appendMessage(msg, files, scroll=true) {
       wrap.appendChild(dlBtn);
       bubble.appendChild(wrap);
     } else {
+      const wrap = document.createElement('div');
       const a = document.createElement('div');
       a.className = 'file-attach';
-      a.style.cursor = 'pointer';
       a.innerHTML = `
         <span class="file-icon-svg">${fileIconSvg(f.file_type)}</span>
         <div class="file-info">
@@ -1338,7 +1374,30 @@ function appendMessage(msg, files, scroll=true) {
           <div class="file-size">${formatSize(f.file_size)}</div>
         </div>`;
       a.addEventListener('click', () => forceDownload(f.file_url, f.file_name));
-      bubble.appendChild(a);
+      wrap.appendChild(a);
+
+      // action buttons
+      const actions = document.createElement('div');
+      actions.className = 'file-actions';
+
+      // download button
+      const dlBtn = document.createElement('button');
+      dlBtn.className = 'file-action-btn';
+      dlBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下载';
+      dlBtn.addEventListener('click', e => { e.stopPropagation(); forceDownload(f.file_url, f.file_name); });
+      actions.appendChild(dlBtn);
+
+      // preview button for text files
+      if (isTextFile(f.file_name)) {
+        const pvBtn = document.createElement('button');
+        pvBtn.className = 'file-action-btn';
+        pvBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>预览';
+        pvBtn.addEventListener('click', e => { e.stopPropagation(); previewTextFile(f.file_url, f.file_name); });
+        actions.appendChild(pvBtn);
+      }
+
+      wrap.appendChild(actions);
+      bubble.appendChild(wrap);
     }
   });
 
@@ -1696,21 +1755,62 @@ document.getElementById('menu-btn').addEventListener('click', () => {
 });
 document.getElementById('overlay').addEventListener('click', closeSidebar);
 
-// ── FORCE DOWNLOAD (fetch blob to avoid encoding issues) ──
+// ── FORCE DOWNLOAD (fetch blob, fix encoding for text files) ──
+function isTextFile(filename) {
+  const ext = (filename || '').split('.').pop().toLowerCase();
+  return ['txt','py','js','ts','html','css','json','md','csv','xml','yaml','yml','ini','cfg','conf','sh','bash','zsh','java','c','cpp','h','hpp','cs','go','rs','rb','php','pl','lua','r','sql','log','toml','vue','jsx','tsx','scss','less','sass','styl','makefile','dockerfile','gitignore','env','bat','cmd','ps1'].includes(ext);
+}
+
+function triggerDownload(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+async function fetchTextUtf8(url) {
+  const resp = await fetch(url, { mode: 'cors' });
+  if (!resp.ok) throw new Error('fetch failed: ' + resp.status);
+  const buffer = await resp.arrayBuffer();
+  return new TextDecoder('utf-8', { fatal: false }).decode(buffer);
+}
+
 async function forceDownload(url, filename) {
   try {
-    const resp = await fetch(url);
-    const blob = await resp.blob();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
+    const resp = await fetch(url, { mode: 'cors' });
+    if (!resp.ok) throw new Error('fetch failed');
+
+    if (isTextFile(filename)) {
+      // For text files: fetch as ArrayBuffer, decode as UTF-8, prepend BOM, re-encode
+      const buffer = await resp.arrayBuffer();
+      const text = new TextDecoder('utf-8', { fatal: false }).decode(buffer);
+      const bom = '\uFEFF';
+      const blob = new Blob([bom + text], { type: 'text/plain;charset=utf-8' });
+      triggerDownload(blob, filename);
+    } else {
+      const blob = await resp.blob();
+      triggerDownload(blob, filename);
+    }
   } catch(e) {
+    console.error('Download failed:', e);
     // fallback: open in new tab
     window.open(url, '_blank');
+  }
+}
+
+async function previewTextFile(url, filename) {
+ try {
+    const text = await fetchTextUtf8(url);
+    document.getElementById('preview-filename').textContent = filename;
+    document.getElementById('preview-content').textContent = text;
+    document.getElementById('preview-download-btn').onclick = () => forceDownload(url, filename);
+    openModal('file-preview-modal');
+  } catch(e) {
+    console.error('Preview failed:', e);
+    forceDownload(url, filename);
   }
 }
 
