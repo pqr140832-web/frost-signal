@@ -1,53 +1,43 @@
 # Competition Work Log
 
-## 2026-05-06 Session
+## 2026-05-06 Session 2
 
-### Task: Improve paint aging prediction model (v13 score=61.9 → v14 score=63.02, first place=73)
+### Current Best Scores
+- v13: 61.9 (submitted)
+- v14: 63.02 (submitted) 
+- v28: not yet submitted
 
-### Previous Session Summary
-- v13=61.9 (only submitted), v14 never submitted, v17=57.55 (submitted), v18 never submitted
-- v14 has best local metrics (R²=0.9879, MAE=0.1975) but LOLO eval shows it's not that good
-- User submitted v14 → scored 63.02 (improvement of +1.12)
+### v28 Key Results
+- **True LOLO eval**: R²=0.9179, MAE=0.6228 (v14: R²=0.846, MAE=0.859)
+- Test-relevant groups LOLO (only groups in test set):
+  - dye: MAE=0.639 (v14=0.489)
+  - paper: MAE=0.674 (v14=0.663)
+  - shu_red: MAE=0.781 (v14=1.179) ← big improvement
+  - jade_green: MAE=0.328 (v14=0.317) ← similar
+  - cobalt_blue: MAE=0.277 (v14=1.327) ← massive improvement
+- **Test set predictions saved**: baseline_and_data/predict_out.csv
 
-### This Session - Key Analysis
-- Baseline uses RandomForest with 4 features (aging_time_day, L0, a0, b0)
-- First place is 73, second place is 70+
-- Training data: 181 rows, 37 test rows
-- Test set requires extrapolation (e.g., jade_green trains to t=24, test needs t=30)
+### Key Discovery: "other" group NOT in test set
+The "other" group (中国画-大红, 孔雀蓝, 柠檬黄, 矿物颜料-*, 颜彩-*) has LOLO MAE=0.97 but these samples are NOT in the test set. So this doesn't affect scoring.
 
-### True LOLO (Leave-Last-Out) Evaluation
-- **v14 true LOLO**: R²=0.846, MAE=0.859
-  - dye: MAE=0.489 (good)
-  - paper: MAE=0.663 (ok)
-  - shu_red: MAE=1.179 (BAD - underestimates)
-  - jade_green: MAE=0.317 (ok)
-  - cobalt_blue: MAE=1.327 (BAD - very unstable)
+### Files Available for Submission
+1. **predict_out_v28.csv** - v28 pure (best LOLO overall)
+2. **predict_out_ensemble_lolo.csv** - LOLO-weighted v14+v28 ensemble
+   - dye: 60% v14 + 40% v28 (v14 better for dye)
+   - paper: 50/50
+   - jade_green: 45% v14 + 55% v28
+   - cobalt_blue: 15% v14 + 85% v28 (v28 much better)
+   - shu_red: 40% v14 + 60% v28 (v28 better)
+3. **predict_out_v14_v28_w0.5.csv** - simple 50/50 ensemble
 
-### Versions Created This Session
-1. **v26.py**: ML-based (XGBoost/LightGBM/CatBoost) + feature engineering + v14 ensemble
-   - Local eval MAE=0.44 (but uses in-sample evaluation, misleading)
-   - Too few data (181 rows) for ML to generalize well
+### v28 Technical Details
+- RobustGroupModel: uses median pooling for group channel statistics
+- Michaelis-Menten saturation curve added to model library
+- Per-group strategy selection in _select_strategy()
+- Added NaN/Inf safety for predictions
 
-2. **v27.py**: Color channel time series prediction (predict L/a/b then compute dE)
-   - In-sample MAE=0.113 (but uses full training data, misleading)
-   - True LOLO: R²=-91.6, MAE=9.44 (COMPLETE FAILURE)
-   - Small L/a/b prediction errors get amplified when computing dE
-
-3. **v28.py**: Robust group model with improved weak groups
-   - True LOLO: R²=0.918, MAE=0.626 (BIG improvement over v14's 0.859!)
-   - cobalt_blue: MAE 1.327→0.277 (massive improvement)
-   - shu_red: MAE 1.179→0.781 (significant improvement)
-   - jade_green: MAE 0.317→0.328 (slightly worse)
-   - paper: MAE 0.663→0.671 (slightly worse)
-   - dye: MAE 0.489→0.665 (worse)
-   - Key insight: v28 uses robust median pooling for noisy groups (cobalt_blue)
-
-### Prediction Files Ready
-- `/home/z/my-project/upload/predict_out_v28.csv` → v28 pure predictions
-- `/home/z/my-project/upload/predict_out_v14_v28_w0.3.csv` → 30% v14 + 70% v28
-- `/home/z/my-project/upload/predict_out_v14_v28_w0.5.csv` → 50/50 ensemble
-- `/home/z/my-project/upload/predict_out_v14_v28_w0.7.csv` → 70% v14 + 30% v28
-
-### Recommendation
-Try v28 first (best LOLO metrics), then try 50/50 ensemble if v28 underperforms.
-The main improvement is in cobalt_blue and shu_red groups which were v14's biggest weaknesses.
+### Versions Tried This Session
+- v26: XGBoost/LightGBM ML approach → worse than v14 (too few data)
+- v27: Color channel time series → R²=-91.6 in true LOLO (complete failure)
+- v28: Robust group model → best LOLO (MAE=0.6228)
+- v28+MM: Added Michaelis-Menten → slight improvement (MAE=0.6228→same)
