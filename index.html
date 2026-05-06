@@ -382,6 +382,13 @@
     .file-info { flex: 1; overflow: hidden; }
     .file-name { font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .file-size { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+    .media-download-btn {
+      display: flex; align-items: center; gap: 4px; padding: 3px 10px; margin-top: 4px;
+      background: rgba(255,255,255,0.08); border: none; border-radius: var(--radius-xs);
+      color: var(--text2); font-size: 11px; cursor: pointer; transition: background 0.15s;
+    }
+    .media-download-btn:hover { background: rgba(255,255,255,0.16); }
+    .media-download-btn svg { width: 14px; height: 14px; }
 
     .img-attach {
       max-width: 220px;
@@ -1288,14 +1295,22 @@ function appendMessage(msg, files, scroll=true) {
   // file attachments
   (files||[]).forEach(f => {
     if (f.file_type && f.file_type.startsWith('image/')) {
+      const wrap = document.createElement('div');
       const img = document.createElement('img');
       img.className = 'img-attach';
       img.src = f.file_url;
       img.alt = f.file_name;
       img.loading = 'lazy';
       img.addEventListener('click', () => openLightbox(f.file_url));
-      bubble.appendChild(img);
+      wrap.appendChild(img);
+      const dlBtn = document.createElement('button');
+      dlBtn.className = 'media-download-btn';
+      dlBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下载图片';
+      dlBtn.addEventListener('click', e => { e.stopPropagation(); forceDownload(f.file_url, f.file_name); });
+      wrap.appendChild(dlBtn);
+      bubble.appendChild(wrap);
     } else if (f.file_type && f.file_type.startsWith('video/')) {
+      const wrap = document.createElement('div');
       const vid = document.createElement('video');
       vid.className = 'img-attach';
       vid.src = f.file_url;
@@ -1305,19 +1320,24 @@ function appendMessage(msg, files, scroll=true) {
       vid.style.borderRadius = '8px';
       vid.style.display = 'block';
       vid.style.marginTop = '4px';
-      bubble.appendChild(vid);
+      wrap.appendChild(vid);
+      const dlBtn = document.createElement('button');
+      dlBtn.className = 'media-download-btn';
+      dlBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下载视频';
+      dlBtn.addEventListener('click', e => { e.stopPropagation(); forceDownload(f.file_url, f.file_name); });
+      wrap.appendChild(dlBtn);
+      bubble.appendChild(wrap);
     } else {
-      const a = document.createElement('a');
+      const a = document.createElement('div');
       a.className = 'file-attach';
-      a.href = f.file_url;
-      a.target = '_blank';
-      a.download = f.file_name;
+      a.style.cursor = 'pointer';
       a.innerHTML = `
         <span class="file-icon-svg">${fileIconSvg(f.file_type)}</span>
         <div class="file-info">
           <div class="file-name">${escHtml(f.file_name)}</div>
           <div class="file-size">${formatSize(f.file_size)}</div>
         </div>`;
+      a.addEventListener('click', () => forceDownload(f.file_url, f.file_name));
       bubble.appendChild(a);
     }
   });
@@ -1474,7 +1494,7 @@ function addPendingFile(file) {
   pendingFiles.push(file);
   const chip = document.createElement('div');
   chip.className = 'file-preview-chip';
-  chip.innerHTML = `<span>${fileIcon(file.type)}</span><span class="fp-name">${escHtml(file.name)}</span>`;
+  chip.innerHTML = `<span class="file-icon-svg">${fileIconSvg(file.type)}</span><span class="fp-name">${escHtml(file.name)}</span>`;
   const rm = document.createElement('button');
   rm.className = 'fp-remove';
   rm.textContent = '✕';
@@ -1675,6 +1695,24 @@ document.getElementById('menu-btn').addEventListener('click', () => {
   document.getElementById('overlay').classList.add('open');
 });
 document.getElementById('overlay').addEventListener('click', closeSidebar);
+
+// ── FORCE DOWNLOAD (fetch blob to avoid encoding issues) ──
+async function forceDownload(url, filename) {
+  try {
+    const resp = await fetch(url);
+    const blob = await resp.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  } catch(e) {
+    // fallback: open in new tab
+    window.open(url, '_blank');
+  }
+}
 
 // ── LIGHTBOX ──
 function openLightbox(url) {
