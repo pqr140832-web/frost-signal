@@ -155,7 +155,6 @@
     }
     .icon-btn:hover { background: var(--surface3); color: var(--text); }
     .icon-btn svg { width: 16px; height: 16px; }
-    .icon-btn.danger:hover { background: rgba(248,113,113,0.15); color: var(--danger); }
 
     #sidebar-tabs {
       display: flex;
@@ -421,33 +420,6 @@
       font-family: var(--mono); font-size: 11.5px; line-height: 1.5;
       white-space: pre-wrap; word-break: break-all; color: var(--text2);
       cursor: text; user-select: text;
-    }
-
-    /* ── FILE PREVIEW IFRAME ── */
-    #file-iframe-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      z-index: 350;
-      flex-direction: column;
-    }
-    #file-iframe-modal.open { display: flex; }
-    #iframe-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0;
-    }
-    #iframe-filename { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-    #iframe-close-btn {
-      width: 32px; height: 32px; border-radius: 8px; border: none; background: rgba(255,255,255,0.1);
-      color: var(--text); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-    #iframe-close-btn:hover { background: rgba(255,255,255,0.2); }
-    #file-iframe {
-      flex: 1; border: none; width: 100%; height: 100%; background: #fff;
-    }
-    #iframe-actions {
-      display: flex; gap: 8px; padding: 12px 16px; background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0;
     }
 
     /* ── INPUT AREA ── */
@@ -786,47 +758,6 @@
     .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
     @keyframes tdot { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }
 
-    /* search & join group */
-    #join-group-btn {
-      margin: 4px 8px;
-      padding: 8px;
-      border: 1px dashed var(--border);
-      border-radius: var(--radius-sm);
-      background: transparent;
-      color: var(--text3);
-      font-family: var(--font);
-      font-size: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.15s;
-      flex-shrink: 0;
-    }
-    #join-group-btn:hover { border-color: var(--accent); color: var(--accent2); background: var(--accent-glow); }
-    #join-group-btn svg { width: 14px; height: 14px; }
-    #search-group-list {
-      max-height: 240px;
-      overflow-y: auto;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-    }
-    .group-search-item {
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      transition: background 0.12s;
-    }
-    .group-search-item:hover { background: var(--surface3); }
-    .group-search-item:not(:last-child) { border-bottom: 1px solid var(--border); }
-    .group-search-item .group-info { flex: 1; overflow: hidden; }
-    .group-search-item .group-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .group-search-item .group-meta { font-size: 11px; color: var(--text3); }
-
     select.input-field {
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239898a8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
@@ -870,10 +801,6 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
       <span id="new-chat-label">新建私聊</span>
     </button>
-    <button id="join-group-btn" style="display:none">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <span>搜索加入群聊</span>
-    </button>
   </div>
 
   <!-- Main -->
@@ -886,12 +813,6 @@
         <div id="chat-title">选择对话</div>
         <div id="chat-subtitle"></div>
       </div>
-      <button class="icon-btn" id="add-member-btn" title="拉人进群" style="display:none">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-      </button>
-      <button class="icon-btn danger" id="delete-group-btn" title="删除群聊" style="display:none">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-      </button>
     </div>
 
     <div id="messages-area">
@@ -940,18 +861,6 @@
   </div>
 </div>
 
-<!-- Modal: Office File Preview (iframe) -->
-<div id="file-iframe-modal">
-  <div id="iframe-header">
-    <span id="iframe-filename"></span>
-    <button id="iframe-close-btn" onclick="document.getElementById('file-iframe-modal').classList.remove('open')">&#10005;</button>
-  </div>
-  <iframe id="file-iframe" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
-  <div id="iframe-actions">
-    <button class="btn btn-primary" id="iframe-download-btn">&#11015; 下载文件</button>
-  </div>
-</div>
-
 <!-- Modal: Login/Register -->
 <div class="modal-bg open" id="auth-modal">
   <div class="modal">
@@ -995,46 +904,6 @@
   </div>
 </div>
 
-<!-- Modal: Search & Join Group -->
-<div class="modal-bg" id="join-group-modal">
-  <div class="modal">
-    <h2>搜索加入群聊</h2>
-    <input class="input-field" id="group-search-input" placeholder="搜索群聊名称…" autocomplete="off">
-    <div id="search-group-list"></div>
-    <div id="join-group-error" class="error-msg" style="min-height:16px"></div>
-    <div class="btn-row">
-      <button class="btn btn-ghost" onclick="closeModal('join-group-modal')">取消</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Add Member to Existing Group -->
-<div class="modal-bg" id="add-member-modal">
-  <div class="modal">
-    <h2>添加群成员</h2>
-    <input class="input-field" id="add-member-search" placeholder="搜索用户名…" autocomplete="off">
-    <div id="add-member-user-list"></div>
-    <div id="add-member-chips" class="member-chips"></div>
-    <div id="add-member-error" class="error-msg" style="min-height:16px"></div>
-    <div class="btn-row">
-      <button class="btn btn-ghost" onclick="closeModal('add-member-modal')">取消</button>
-      <button class="btn btn-primary" id="confirm-add-member-btn">添加</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Confirm Delete Group -->
-<div class="modal-bg" id="delete-group-modal">
-  <div class="modal">
-    <h2>删除群聊</h2>
-    <p id="delete-group-confirm-text">确定要删除这个群聊吗？此操作不可撤销，所有消息将被永久删除。</p>
-    <div class="btn-row">
-      <button class="btn btn-ghost" onclick="closeModal('delete-group-modal')">取消</button>
-      <button class="btn btn-danger" id="confirm-delete-group-btn">删除</button>
-    </div>
-  </div>
-</div>
-
 <!-- Modal: New Group Chat -->
 <div class="modal-bg" id="new-group-modal">
   <div class="modal">
@@ -1064,7 +933,6 @@ let allUsers = [];
 let conversations = [];
 let pendingFiles = [];
 let groupMembers = [];
-let addMemberList = []; // for adding members to existing group
 let realtimeSub = null;
 let lastMsgDate = null;
 let pollInterval = null;
@@ -1354,7 +1222,6 @@ document.getElementById('sidebar-tabs').addEventListener('click', e => {
   btn.classList.add('active');
   currentTab = btn.dataset.tab;
   document.getElementById('new-chat-label').textContent = currentTab === 'private' ? '新建私聊' : '新建群聊';
-  document.getElementById('join-group-btn').style.display = currentTab === 'group' ? 'flex' : 'none';
   renderConvList();
 });
 
@@ -1386,17 +1253,6 @@ function updateChatHeader(conv) {
     ? `${conv.member_ids?.length || 0} 位成员`
     : '';
   document.getElementById('chat-subtitle').textContent = subtitle;
-
-  // 显示/隐藏群操作按钮（仅群主可见）
-  const deleteBtn = document.getElementById('delete-group-btn');
-  const addBtn = document.getElementById('add-member-btn');
-  if (conv.type === 'group' && conv.created_by === currentUser.id) {
-    deleteBtn.style.display = 'flex';
-    addBtn.style.display = 'flex';
-  } else {
-    deleteBtn.style.display = 'none';
-    addBtn.style.display = 'none';
-  }
 }
 
 async function loadMessages(convId) {
@@ -1538,14 +1394,6 @@ function appendMessage(msg, files, scroll=true) {
         pvBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>预览';
         pvBtn.addEventListener('click', e => { e.stopPropagation(); previewTextFile(f.file_url, f.file_name); });
         actions.appendChild(pvBtn);
-      }
-      // preview button for office files (doc/docx/xls/xlsx/ppt/pptx/pdf/csv)
-      if (canPreviewOnline(f.file_type, f.file_name)) {
-        const pvBtn2 = document.createElement('button');
-        pvBtn2.className = 'file-action-btn';
-        pvBtn2.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>在线预览';
-        pvBtn2.addEventListener('click', e => { e.stopPropagation(); previewFileOnline(f.file_url, f.file_name, f.file_type); });
-        actions.appendChild(pvBtn2);
       }
 
       wrap.appendChild(actions);
@@ -1876,10 +1724,6 @@ document.getElementById('create-group-btn').addEventListener('click', async () =
   if (groupMembers.length === 0) { errEl.textContent = '请至少添加一位成员'; return; }
   errEl.textContent = '';
 
-  // 检查群名是否已存在
-  const { data: existingGroup } = await sb.from('conversations').select('id').eq('type','group').eq('name', name).single();
-  if (existingGroup) { errEl.textContent = '该群聊名称已存在，请换一个'; return; }
-
   const { data: conv, error } = await sb.from('conversations').insert({
     type: 'group',
     name,
@@ -1902,228 +1746,6 @@ document.getElementById('create-group-btn').addEventListener('click', async () =
   document.getElementById('new-chat-label').textContent = '新建群聊';
   renderConvList();
   selectConv(conv.id);
-});
-
-// ── SEARCH & JOIN GROUP ──
-document.getElementById('join-group-btn').addEventListener('click', () => {
-  document.getElementById('group-search-input').value = '';
-  document.getElementById('search-group-list').innerHTML = '';
-  document.getElementById('join-group-error').textContent = '';
-  openModal('join-group-modal');
-});
-
-document.getElementById('group-search-input').addEventListener('input', e => {
-  searchGroups(e.target.value);
-});
-
-async function searchGroups(query) {
-  const list = document.getElementById('search-group-list');
-  if (!query.trim()) { list.innerHTML = ''; return; }
-
-  const { data: groups, error } = await sb.from('conversations')
-    .select('id,name,created_at')
-    .eq('type', 'group')
-    .ilike('name', '%' + query.trim() + '%')
-    .order('updated_at', { ascending: false })
-    .limit(20);
-
-  if (!groups || groups.length === 0) {
-    list.innerHTML = '<div style="padding:16px;text-align:center;font-size:12px;color:var(--text3)">没有找到群聊</div>';
-    return;
-  }
-
-  // 查询每个群的成员数
-  const groupIds = groups.map(g => g.id);
-  const { data: allMembers } = await sb.from('conversation_members')
-    .select('conversation_id,user_id')
-    .in('conversation_id', groupIds);
-  const memberCountMap = {};
-  (allMembers||[]).forEach(m => {
-    memberCountMap[m.conversation_id] = (memberCountMap[m.conversation_id] || 0) + 1;
-  });
-
-  // 检查用户已加入的群
-  const myConvIds = new Set(conversations.filter(c => c.type === 'group').map(c => c.id));
-
-  list.innerHTML = '';
-  groups.forEach(g => {
-    const isMember = myConvIds.has(g.id);
-    const memberCount = memberCountMap[g.id] || 0;
-    const item = document.createElement('div');
-    item.className = 'group-search-item';
-    item.innerHTML = `
-      ${makeAvatar(g.name, 'group-av').outerHTML}
-      <div class="group-info">
-        <div class="group-name">${escHtml(g.name)}</div>
-        <div class="group-meta">${memberCount} 位成员</div>
-      </div>
-      <span style="font-size:12px;color:${isMember ? 'var(--text3)' : 'var(--accent2)'}">${isMember ? '已加入' : '加入'}</span>
-    `;
-    if (!isMember) {
-      item.addEventListener('click', () => joinGroup(g.id, g.name));
-    }
-    list.appendChild(item);
-  });
-}
-
-async function joinGroup(groupId, groupName) {
-  const errEl = document.getElementById('join-group-error');
-  errEl.textContent = '';
-
-  // 检查是否已加入
-  const { data: existing } = await sb.from('conversation_members')
-    .select('id')
-    .eq('conversation_id', groupId)
-    .eq('user_id', currentUser.id)
-    .single();
-
-  if (existing) {
-    errEl.textContent = '你已经在这个群聊里了';
-    return;
-  }
-
-  const { error } = await sb.from('conversation_members').insert({
-    conversation_id: groupId,
-    user_id: currentUser.id
-  });
-
-  if (error) { errEl.textContent = '加入失败'; return; }
-
-  closeModal('join-group-modal');
-  await loadConversations();
-  currentTab = 'group';
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('[data-tab="group"]').classList.add('active');
-  document.getElementById('new-chat-label').textContent = '新建群聊';
-  renderConvList();
-  selectConv(groupId);
-}
-
-// ── ADD MEMBER TO EXISTING GROUP ──
-document.getElementById('add-member-btn').addEventListener('click', () => {
-  const conv = conversations.find(c => c.id === currentConvId);
-  if (!conv || conv.type !== 'group') return;
-  addMemberList = [];
-  document.getElementById('add-member-search').value = '';
-  document.getElementById('add-member-user-list').innerHTML = '';
-  document.getElementById('add-member-chips').innerHTML = '';
-  document.getElementById('add-member-error').textContent = '';
-  openModal('add-member-modal');
-});
-
-document.getElementById('add-member-search').addEventListener('input', e => {
-  renderAddMemberSearch(e.target.value);
-});
-
-function renderAddMemberSearch(query) {
-  const list = document.getElementById('add-member-user-list');
-  const conv = conversations.find(c => c.id === currentConvId);
-  const existingIds = conv ? (conv.member_ids || []) : [];
-  const filtered = allUsers.filter(u =>
-    u.id !== currentUser.id &&
-    !existingIds.includes(u.id) &&
-    !addMemberList.find(m => m.id === u.id) &&
-    u.username.toLowerCase().includes(query.toLowerCase())
-  );
-  list.innerHTML = '';
-  if (!query.trim()) return;
-  filtered.forEach(u => {
-    const item = document.createElement('div');
-    item.className = 'user-list-item';
-    item.appendChild(makeAvatar(u.username));
-    const name = document.createElement('span');
-    name.textContent = u.username;
-    item.appendChild(name);
-    item.addEventListener('click', () => {
-      addMemberList.push(u);
-      renderAddMemberChips();
-      renderAddMemberSearch('');
-      document.getElementById('add-member-search').value = '';
-    });
-    list.appendChild(item);
-  });
-  if (filtered.length === 0) {
-    list.innerHTML = '<div style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">没有找到用户</div>';
-  }
-}
-
-function renderAddMemberChips() {
-  const chips = document.getElementById('add-member-chips');
-  chips.innerHTML = '';
-  addMemberList.forEach(u => {
-    const chip = document.createElement('div');
-    chip.className = 'member-chip';
-    chip.innerHTML = `<span>${escHtml(u.username)}</span>`;
-    const rm = document.createElement('button');
-    rm.textContent = '✕';
-    rm.addEventListener('click', () => {
-      addMemberList = addMemberList.filter(m => m.id !== u.id);
-      renderAddMemberChips();
-    });
-    chip.appendChild(rm);
-    chips.appendChild(chip);
-  });
-}
-
-document.getElementById('confirm-add-member-btn').addEventListener('click', async () => {
-  const conv = conversations.find(c => c.id === currentConvId);
-  if (!conv || conv.type !== 'group') return;
-  const errEl = document.getElementById('add-member-error');
-  if (addMemberList.length === 0) { errEl.textContent = '请至少选择一位成员'; return; }
-  errEl.textContent = '';
-
-  const members = addMemberList.map(u => ({
-    conversation_id: conv.id,
-    user_id: u.id
-  }));
-
-  const { error } = await sb.from('conversation_members').insert(members);
-  if (error) { errEl.textContent = '添加失败'; return; }
-
-  closeModal('add-member-modal');
-  await loadConversations();
-  // update header subtitle with new member count
-  updateChatHeader(conv);
-});
-
-// ── DELETE GROUP (owner only) ──
-document.getElementById('delete-group-btn').addEventListener('click', () => {
-  const conv = conversations.find(c => c.id === currentConvId);
-  if (!conv || conv.type !== 'group') return;
-  document.getElementById('delete-group-confirm-text').textContent =
-    `确定要删除群聊「${conv.name || '未命名'}」吗？此操作不可撤销，所有消息将被永久删除。`;
-  openModal('delete-group-modal');
-});
-
-document.getElementById('confirm-delete-group-btn').addEventListener('click', async () => {
-  const conv = conversations.find(c => c.id === currentConvId);
-  if (!conv || conv.type !== 'group') return;
-  if (conv.created_by !== currentUser.id) { alert('只有群主才能删除群聊'); closeModal('delete-group-modal'); return; }
-
-  const groupId = conv.id;
-  closeModal('delete-group-modal');
-
-  // 删除文件
-  const { data: msgs } = await sb.from('messages').select('id').eq('conversation_id', groupId);
-  if (msgs && msgs.length > 0) {
-    const msgIds = msgs.map(m => m.id);
-    await sb.from('files').delete().in('message_id', msgIds);
-    await sb.from('messages').delete().eq('conversation_id', groupId);
-  }
-  // 删除成员
-  await sb.from('conversation_members').delete().eq('conversation_id', groupId);
-  // 删除群聊
-  await sb.from('conversations').delete().eq('id', groupId);
-
-  currentConvId = null;
-  document.getElementById('input-area').style.display = 'none';
-  document.getElementById('messages-area').innerHTML = '<div id="empty-state"><div class="empty-icon">💬</div><p>选择或新建一个对话</p></div>';
-  document.getElementById('delete-group-btn').style.display = 'none';
-  document.getElementById('add-member-btn').style.display = 'none';
-  if (pollInterval) clearInterval(pollInterval);
-
-  await loadConversations();
-  renderConvList();
 });
 
 // ── MENU (mobile) ──
@@ -2179,33 +1801,8 @@ async function forceDownload(url, filename) {
   }
 }
 
-function canPreviewOnline(type, name) {
-  if (!type && !name) return false;
-  const ext = (name || '').split('.').pop().toLowerCase();
-  if (['doc','docx'].includes(ext) || type.includes('word') || type.includes('document')) return true;
-  if (['xls','xlsx'].includes(ext) || type.includes('sheet') || type.includes('excel')) return true;
-  if (['ppt','pptx'].includes(ext) || type.includes('presentation')) return true;
-  if (ext === 'pdf' || type.includes('pdf')) return true;
-  if (ext === 'csv') return true;
-  return false;
-}
-
-function previewFileOnline(url, filename, mimeType) {
-  const encodedUrl = encodeURIComponent(url);
-  const previewUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodedUrl}`;
-  document.getElementById('iframe-filename').textContent = filename;
-  document.getElementById('file-iframe').src = previewUrl;
-  document.getElementById('iframe-download-btn').onclick = () => forceDownload(url, filename);
-  document.getElementById('file-iframe-modal').classList.add('open');
-}
-
-function closeFilePreview() {
-  document.getElementById('file-iframe-modal').classList.remove('open');
-  document.getElementById('file-iframe').src = 'about:blank';
-}
-
 async function previewTextFile(url, filename) {
-  try {
+ try {
     const text = await fetchTextUtf8(url);
     document.getElementById('preview-filename').textContent = filename;
     document.getElementById('preview-content').textContent = text;
@@ -2213,7 +1810,7 @@ async function previewTextFile(url, filename) {
     openModal('file-preview-modal');
   } catch(e) {
     console.error('Preview failed:', e);
-    alert('预览失败，请尝试下载文件');
+    forceDownload(url, filename);
   }
 }
 
