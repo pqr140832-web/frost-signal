@@ -1387,12 +1387,12 @@ function updateChatHeader(conv) {
     : '';
   document.getElementById('chat-subtitle').textContent = subtitle;
 
-  // 显示/隐藏群操作按钮（仅群主可见）
+  // 显示/隐藏群操作按钮
   const deleteBtn = document.getElementById('delete-group-btn');
   const addBtn = document.getElementById('add-member-btn');
-  if (conv.type === 'group' && conv.created_by === currentUser.id) {
-    deleteBtn.style.display = 'flex';
+  if (conv.type === 'group') {
     addBtn.style.display = 'flex';
+    deleteBtn.style.display = conv.created_by === currentUser.id ? 'flex' : 'none';
   } else {
     deleteBtn.style.display = 'none';
     addBtn.style.display = 'none';
