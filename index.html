@@ -862,6 +862,151 @@
       background-position: right 12px center;
       padding-right: 36px;
     }
+
+    /* ── ENHANCEMENTS (mentions, search, members, notifications, polish) ── */
+    /* @提及 高亮 */
+    .mention {
+      color: var(--accent2);
+      background: var(--accent-glow);
+      border-radius: 4px;
+      padding: 0 3px;
+      font-weight: 600;
+    }
+    .msg-group.self .mention { color: #d9d2ff; background: rgba(255,255,255,0.14); }
+
+    /* @提及 弹出选择框 */
+    #mention-popup {
+      position: absolute;
+      bottom: 100%;
+      left: 12px;
+      margin-bottom: 6px;
+      width: 220px;
+      max-height: 200px;
+      overflow-y: auto;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+      display: none;
+      z-index: 60;
+    }
+    #mention-popup.open { display: block; }
+    .mention-item {
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .mention-item:hover, .mention-item.active { background: var(--surface3); }
+
+    /* 会话内搜索栏 */
+    #search-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    #search-bar.open { display: flex; }
+    #search-bar input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 7px 12px;
+      outline: none;
+    }
+    #search-bar input:focus { border-color: var(--accent); }
+    #search-count { font-size: 12px; color: var(--text3); white-space: nowrap; }
+    .msg-group.search-hidden { display: none; }
+    mark.search-hit { background: var(--accent); color: #fff; border-radius: 3px; padding: 0 2px; }
+
+    /* 拖拽上传遮罩 */
+    #drop-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(124,106,247,0.12);
+      border: 2px dashed var(--accent2);
+      border-radius: var(--radius);
+      pointer-events: none;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent2);
+      backdrop-filter: blur(2px);
+    }
+    #drop-overlay.show { display: flex; }
+
+    /* 群成员面板 */
+    .members-list { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      transition: background 0.12s;
+    }
+    .member-row:hover { background: var(--surface2); }
+    .member-row .m-name { flex: 1; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .owner-tag {
+      font-size: 10px;
+      padding: 1px 7px;
+      border-radius: 8px;
+      background: var(--accent-glow);
+      color: var(--accent2);
+      font-weight: 600;
+    }
+    .member-remove {
+      background: transparent; border: none; color: var(--text3);
+      cursor: pointer; font-size: 13px; padding: 4px 6px; border-radius: 6px;
+    }
+    .member-remove:hover { color: var(--danger); background: rgba(248,113,113,0.12); }
+
+    /* 发送按钮 loading */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #send-btn:disabled { opacity: 0.7; cursor: default; }
+
+    /* clickable subtitle */
+    #chat-subtitle.clickable { cursor: pointer; }
+    #chat-subtitle.clickable:hover { color: var(--accent2); text-decoration: underline; }
+
+    /* ── 视觉打磨 ── */
+    #chat-header {
+      background: linear-gradient(180deg, var(--surface) 0%, rgba(24,24,28,0.85) 100%);
+      backdrop-filter: blur(8px);
+    }
+    .msg-bubble { box-shadow: 0 1px 2px rgba(0,0,0,0.18); }
+    .msg-group { animation: msg-in 0.22s cubic-bezier(.4,0,.2,1); }
+    @keyframes msg-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .conv-item { animation: none; }
+    #send-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 2px 10px var(--accent-glow);
+      transition: transform 0.12s, box-shadow 0.2s;
+    }
+    #send-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
+    #send-btn:not(:disabled):active { transform: translateY(0); }
+    .unread-badge { box-shadow: 0 2px 6px var(--accent-glow); }
+    .empty-icon { animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
   </style>
 </head>
 <body>
@@ -917,6 +1062,9 @@
         <div id="chat-title">选择对话</div>
         <div id="chat-subtitle"></div>
       </div>
+      <button class="icon-btn" id="search-btn" title="搜索消息" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
       <button class="icon-btn" id="add-member-btn" title="拉人进群" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
       </button>
@@ -928,6 +1076,13 @@
       </button>
     </div>
 
+    <div id="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--text3);flex-shrink:0"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input id="search-input" placeholder="在此对话中搜索…" autocomplete="off">
+      <span id="search-count"></span>
+      <button class="icon-btn" id="search-close" title="关闭" style="font-size:14px">✕</button>
+    </div>
+
     <div id="messages-area">
       <div id="empty-state">
         <div class="empty-icon">💬</div>
@@ -935,14 +1090,17 @@
       </div>
     </div>
 
+    <div id="drop-overlay">拖放文件到这里上传</div>
+
     <div id="input-area" style="display:none">
       <div id="file-previews"></div>
-      <div id="input-row">
+      <div id="input-row" style="position:relative">
+        <div id="mention-popup"></div>
         <button id="file-btn" title="上传文件">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
         </button>
         <input type="file" id="file-input" multiple="" style="display:none" accept="*/*">
-        <textarea id="msg-input" placeholder="发送消息…" rows="1"></textarea>
+        <textarea id="msg-input" placeholder="发送消息…（Enter 发送，Shift+Enter 换行）" rows="1"></textarea>
         <button id="send-btn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         </button>
@@ -1001,6 +1159,20 @@
       <div id="auth-error" class="error-msg" style="margin-top:8px;min-height:16px"></div>
     </div>
     <button class="btn btn-primary" id="auth-submit-btn" style="width:100%">登录</button>
+  </div>
+</div>
+
+<!-- Modal: Group Members -->
+<div class="modal-bg" id="members-modal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2>群成员 <span id="members-count" style="color:var(--text3);font-weight:400"></span></h2>
+      <button class="icon-btn" onclick="closeModal('members-modal')" style="font-size:16px">✕</button>
+    </div>
+    <div class="members-list" id="members-list"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('members-modal')">关闭</button>
+    </div>
   </div>
 </div>
 
@@ -1396,6 +1568,7 @@ async function loadConversations() {
   });
   // 按最后活动时间排序
   conversations.sort((a, b) => (b.last_activity || '').localeCompare(a.last_activity || ''));
+  maybeNotify(unreadMap, lastMsgMap);
   renderConvList();
 }
 
@@ -1475,6 +1648,7 @@ document.getElementById('sidebar-tabs').addEventListener('click', e => {
 async function selectConv(id) {
   currentConvId = id;
   markConvRead(id); // 进入会话即标记已读
+  closeSearch();
   closeSidebar();
   renderConvList();
 
@@ -1500,6 +1674,18 @@ function updateChatHeader(conv) {
     ? `${conv.member_ids?.length || 0} 位成员`
     : '';
   document.getElementById('chat-subtitle').textContent = subtitle;
+
+  // 搜索按钮：任意会话可用
+  document.getElementById('search-btn').style.display = 'flex';
+  // 群聊：点击副标题查看成员
+  const sub = document.getElementById('chat-subtitle');
+  if (conv.type === 'group') {
+    sub.classList.add('clickable');
+    sub.onclick = openMembersPanel;
+  } else {
+    sub.classList.remove('clickable');
+    sub.onclick = null;
+  }
 
   // 显示/隐藏群操作按钮
   const deleteBtn = document.getElementById('delete-group-btn');
@@ -1583,10 +1769,10 @@ function appendMessage(msg, files, scroll=true) {
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
 
-  // text content
+  // text content（@提及高亮）
   if (msg.content && msg.content.trim()) {
     const txt = document.createElement('div');
-    txt.textContent = msg.content;
+    txt.innerHTML = renderMentions(msg.content);
     bubble.appendChild(txt);
   }
 
@@ -1710,6 +1896,221 @@ function scrollToBottom() {
   area.scrollTop = area.scrollHeight;
 }
 
+// ── @提及 ──
+function renderMentions(text) {
+  // 先转义，再把已知用户名的 @提及 高亮
+  return escHtml(text).replace(/@([^\s@]{1,30})/g, (full, name) => {
+    return allUsers.some(u => u.username === name)
+      ? `<span class="mention">@${escHtml(name)}</span>` : full;
+  });
+}
+
+function extractMentionIds(content) {
+  const ids = [];
+  let m; const re = /@([^\s@]{1,30})/g;
+  while ((m = re.exec(content)) !== null) {
+    const u = allUsers.find(x => x.username === m[1]);
+    if (u && !ids.includes(u.id)) ids.push(u.id);
+  }
+  return ids;
+}
+
+function getCurrentGroupMembers() {
+  const conv = conversations.find(c => c.id === currentConvId);
+  if (!conv || conv.type !== 'group') return [];
+  return (conv.member_ids || [])
+    .filter(id => id !== currentUser.id)
+    .map(id => allUsers.find(u => u.id === id))
+    .filter(Boolean);
+}
+
+function updateMentionPopup() {
+  const input = document.getElementById('msg-input');
+  const popup = document.getElementById('mention-popup');
+  const conv = conversations.find(c => c.id === currentConvId);
+  if (!conv || conv.type !== 'group') { popup.classList.remove('open'); return; }
+  const before = input.value.slice(0, input.selectionStart);
+  const m = before.match(/@([^\s@]*)$/);
+  if (!m) { popup.classList.remove('open'); return; }
+  const query = m[1].toLowerCase();
+  const members = getCurrentGroupMembers().filter(u => u.username.toLowerCase().includes(query));
+  if (members.length === 0) { popup.classList.remove('open'); return; }
+  popup.innerHTML = '';
+  members.slice(0, 8).forEach(u => {
+    const item = document.createElement('div');
+    item.className = 'mention-item';
+    item.appendChild(makeAvatar(u.username));
+    const sp = document.createElement('span'); sp.textContent = u.username;
+    item.appendChild(sp);
+    item.addEventListener('mousedown', e => { e.preventDefault(); insertMention(u.username, m[1]); });
+    popup.appendChild(item);
+  });
+  popup.classList.add('open');
+}
+
+function insertMention(username, partial) {
+  const input = document.getElementById('msg-input');
+  const pos = input.selectionStart;
+  const before = input.value.slice(0, pos);
+  const after = input.value.slice(pos);
+  const newBefore = before.slice(0, before.length - partial.length - 1) + '@' + username + ' ';
+  input.value = newBefore + after;
+  const np = newBefore.length;
+  input.setSelectionRange(np, np);
+  input.focus();
+  document.getElementById('mention-popup').classList.remove('open');
+}
+
+// ── 会话内搜索 ──
+function openSearch() {
+  document.getElementById('search-bar').classList.add('open');
+  const inp = document.getElementById('search-input');
+  inp.value = '';
+  document.getElementById('search-count').textContent = '';
+  inp.focus();
+}
+function closeSearch() {
+  document.getElementById('search-bar').classList.remove('open');
+  document.querySelectorAll('#messages-area .msg-group').forEach(g => g.classList.remove('search-hidden'));
+  document.getElementById('search-count').textContent = '';
+}
+function runSearch(q) {
+  const query = (q || '').trim().toLowerCase();
+  const groups = document.querySelectorAll('#messages-area .msg-group');
+  const countEl = document.getElementById('search-count');
+  if (!query) { groups.forEach(g => g.classList.remove('search-hidden')); countEl.textContent = ''; return; }
+  let hits = 0, first = null;
+  groups.forEach(g => {
+    const match = g.textContent.toLowerCase().includes(query);
+    g.classList.toggle('search-hidden', !match);
+    if (match) { hits++; if (!first) first = g; }
+  });
+  countEl.textContent = hits + ' 条结果';
+  if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+
+// ── 群成员面板 ──
+function openMembersPanel() {
+  const conv = conversations.find(c => c.id === currentConvId);
+  if (!conv || conv.type !== 'group') return;
+  const list = document.getElementById('members-list');
+  const ids = conv.member_ids || [];
+  document.getElementById('members-count').textContent = `(${ids.length})`;
+  const isOwner = conv.created_by === currentUser.id;
+  list.innerHTML = '';
+  ids.forEach(id => {
+    const u = allUsers.find(x => x.id === id);
+    const name = u ? u.username : '未知用户';
+    const row = document.createElement('div');
+    row.className = 'member-row';
+    row.appendChild(makeAvatar(name));
+    const nm = document.createElement('div');
+    nm.className = 'm-name';
+    nm.textContent = name + (id === currentUser.id ? '（我）' : '');
+    row.appendChild(nm);
+    if (id === conv.created_by) {
+      const tag = document.createElement('span');
+      tag.className = 'owner-tag';
+      tag.textContent = '群主';
+      row.appendChild(tag);
+    } else if (isOwner) {
+      const rm = document.createElement('button');
+      rm.className = 'member-remove';
+      rm.textContent = '移除';
+      rm.addEventListener('click', () => removeMember(conv.id, id, name));
+      row.appendChild(rm);
+    }
+    list.appendChild(row);
+  });
+  openModal('members-modal');
+}
+
+async function removeMember(convId, userId, name) {
+  if (!confirm(`将「${name}」移出群聊？`)) return;
+  const { error } = await sb.from('conversation_members')
+    .delete().eq('conversation_id', convId).eq('user_id', userId);
+  if (error) { alert('移除失败'); return; }
+  await loadConversations();
+  const conv = conversations.find(c => c.id === convId);
+  if (conv) updateChatHeader(conv);
+  openMembersPanel();
+}
+
+// ── 桌面通知 ──
+let notifReady = false;
+let prevUnreadMap = {};
+function maybeNotify(unreadMap, lastMsgMap) {
+  if (notifReady && 'Notification' in window && Notification.permission === 'granted'
+      && (document.hidden || !document.hasFocus())) {
+    Object.keys(unreadMap).forEach(cid => {
+      if (cid === currentConvId) return;
+      if ((unreadMap[cid] || 0) > (prevUnreadMap[cid] || 0)) {
+        const conv = conversations.find(c => c.id === cid);
+        const title = conv ? getConvName(conv) : '新消息';
+        const lm = lastMsgMap[cid];
+        const body = lm ? ((lm.content || '').trim() || '[文件]') : '';
+        try { new Notification(title, { body }); } catch (e) {}
+      }
+    });
+  }
+  prevUnreadMap = { ...unreadMap };
+  notifReady = true;
+}
+
+// 首次点击时请求通知权限（需要用户手势）
+document.addEventListener('click', function reqNotif() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().catch(() => {});
+  }
+}, { once: true });
+
+// ── 搜索栏事件 ──
+document.getElementById('search-btn').addEventListener('click', () => {
+  const bar = document.getElementById('search-bar');
+  bar.classList.contains('open') ? closeSearch() : openSearch();
+});
+document.getElementById('search-close').addEventListener('click', closeSearch);
+document.getElementById('search-input').addEventListener('input', e => runSearch(e.target.value));
+document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Escape') closeSearch(); });
+
+// ── @提及输入监听 ──
+['input', 'keyup', 'click'].forEach(ev => {
+  document.getElementById('msg-input').addEventListener(ev, updateMentionPopup);
+});
+document.getElementById('msg-input').addEventListener('blur', () => {
+  setTimeout(() => document.getElementById('mention-popup').classList.remove('open'), 150);
+});
+
+// ── 拖拽上传 ──
+(function setupDragDrop() {
+  const main = document.getElementById('main');
+  const overlay = document.getElementById('drop-overlay');
+  let depth = 0;
+  const hasFiles = e => Array.from(e.dataTransfer?.types || []).includes('Files');
+  main.addEventListener('dragenter', e => {
+    if (!currentConvId || !hasFiles(e)) return;
+    e.preventDefault(); depth++; overlay.classList.add('show');
+  });
+  main.addEventListener('dragover', e => { if (currentConvId && hasFiles(e)) e.preventDefault(); });
+  main.addEventListener('dragleave', () => { depth--; if (depth <= 0) { depth = 0; overlay.classList.remove('show'); } });
+  main.addEventListener('drop', e => {
+    depth = 0; overlay.classList.remove('show');
+    if (!currentConvId || !hasFiles(e)) return;
+    e.preventDefault();
+    Array.from(e.dataTransfer.files || []).forEach(addPendingFile);
+  });
+})();
+
+// ── 粘贴上传（图片等） ──
+document.getElementById('msg-input').addEventListener('paste', e => {
+  const items = Array.from(e.clipboardData?.items || []);
+  let added = false;
+  items.forEach(it => {
+    if (it.kind === 'file') { const f = it.getAsFile(); if (f) { addPendingFile(f); added = true; } }
+  });
+  if (added) e.preventDefault();
+});
+
 // ── REALTIME ──
 function subscribeRealtime() {
   sb.channel('conv-updates')
@@ -1753,41 +2154,63 @@ function subscribeMessages(convId) {
 // ── SEND MESSAGE ──
 let sendingMsgIds = new Set(); // 防止WebSocket重复渲染
 
+let isSending = false;
 async function sendMessage() {
+  if (isSending) return;
   const input = document.getElementById('msg-input');
   const content = input.value.trim();
 
   if (!content && pendingFiles.length === 0) return;
   if (!currentConvId) return;
 
+  isSending = true;
+  const sendBtn = document.getElementById('send-btn');
+  const origBtnHtml = sendBtn.innerHTML;
+  sendBtn.disabled = true;
+  sendBtn.innerHTML = '<div class="spinner"></div>';
+  document.getElementById('mention-popup').classList.remove('open');
+
+  const convId = currentConvId;
   input.value = '';
   input.style.height = '';
   const filesToSend = [...pendingFiles];
   pendingFiles = [];
   document.getElementById('file-previews').innerHTML = '';
 
-  // insert message
-  const { data: msg, error } = await sb.from('messages').insert({
-    conversation_id: currentConvId,
-    sender_id: currentUser.id,
-    content: content || ''
-  }).select().single();
+  try {
+    const mentioned = content ? extractMentionIds(content) : [];
 
-  if (error) { alert('发送失败：' + error.message); return; }
+    // insert message
+    const { data: msg, error } = await sb.from('messages').insert({
+      conversation_id: convId,
+      sender_id: currentUser.id,
+      content: content || '',
+      mentioned_user_ids: mentioned.length ? mentioned : null
+    }).select().single();
 
-  // 立即渲染，标记ID防止轮询重复
-  sendingMsgIds.add(msg.id);
-  renderedMsgIds.add(msg.id);
+    if (error) { alert('发送失败：' + error.message); return; }
 
-  let uploadedFiles = [];
-  if (filesToSend.length > 0) {
-    uploadedFiles = await uploadFiles(msg.id, filesToSend);
+    // 立即渲染，标记ID防止轮询重复
+    sendingMsgIds.add(msg.id);
+    renderedMsgIds.add(msg.id);
+
+    let uploadedFiles = [];
+    if (filesToSend.length > 0) {
+      uploadedFiles = await uploadFiles(msg.id, filesToSend);
+    }
+
+    if (convId === currentConvId) appendMessage(msg, uploadedFiles, true);
+    lastMsgTimestamp = msg.created_at;
+    markConvRead(convId, msg.created_at);
+
+    // update conversation timestamp
+    await sb.from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', convId);
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.innerHTML = origBtnHtml;
+    isSending = false;
+    input.focus();
   }
-
-  appendMessage(msg, uploadedFiles, true);
-
-  // update conversation timestamp
-  await sb.from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', currentConvId);
 }
 
 async function uploadFiles(msgId, files) {
@@ -2298,6 +2721,8 @@ function resetChatView() {
   document.getElementById('delete-group-btn').style.display = 'none';
   document.getElementById('add-member-btn').style.display = 'none';
   document.getElementById('leave-group-btn').style.display = 'none';
+  document.getElementById('search-btn').style.display = 'none';
+  closeSearch();
   if (pollInterval) clearInterval(pollInterval);
 }
 
