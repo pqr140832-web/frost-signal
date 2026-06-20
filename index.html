@@ -860,6 +860,9 @@
       <button class="icon-btn" id="edit-username-btn" title="修改用户名">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
       </button>
+      <button class="icon-btn" id="logout-btn" title="退出登录">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      </button>
     </div>
     <div id="sidebar-tabs">
       <button class="tab-btn active" data-tab="private">私聊</button>
@@ -1240,6 +1243,22 @@ document.getElementById('my-avatar').addEventListener('click', () => {
   openModal('edit-username-modal');
 });
 
+// ── LOGOUT ──
+document.getElementById('logout-btn').addEventListener('click', () => {
+  if (!confirm('确定要退出登录吗？')) return;
+  // 清理定时器与实时订阅
+  if (pollInterval) clearInterval(pollInterval);
+  if (realtimeSub) { sb.removeChannel(realtimeSub); realtimeSub = null; }
+  try { sb.removeAllChannels(); } catch (e) {}
+  // 清理本地登录状态
+  localStorage.removeItem('shuangxin_user');
+  currentUser = null;
+  currentConvId = null;
+  conversations = [];
+  // 重新加载到登录界面，确保状态彻底重置
+  location.reload();
+});
+
 document.getElementById('save-username-btn').addEventListener('click', async () => {
   const newName = document.getElementById('new-username-input').value.trim();
   const errEl = document.getElementById('edit-username-error');
@@ -1343,7 +1362,7 @@ function getConvName(conv) {
 }
 
 function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 // ── TABS ──
@@ -1587,7 +1606,8 @@ function subscribeMessages(convId) {
   pollInterval = setInterval(async () => {
     if (!currentConvId) return;
     let query = sb.from('messages').select('*').eq('conversation_id', convId).order('created_at', { ascending: true });
-    if (lastMsgTimestamp) query = query.gt('created_at', lastMsgTimestamp);
+    // 用 gte 而非 gt：避免同一时间戳的多条消息被永久漏掉（renderedMsgIds 已负责去重）
+    if (lastMsgTimestamp) query = query.gte('created_at', lastMsgTimestamp);
     const { data: newMsgs } = await query;
     if (!newMsgs || newMsgs.length === 0) return;
     const msgIds = newMsgs.map(m => m.id);
@@ -1771,20 +1791,38 @@ document.getElementById('private-search').addEventListener('input', e => {
 async function startPrivateChat(otherUser) {
   closeModal('new-private-modal');
 
-  // check if private chat already exists
-  const existing = conversations.find(c => {
-    if (c.type !== 'private') return false;
-    const ids = c.member_ids || [];
-    return ids.includes(currentUser.id) && ids.includes(otherUser.id);
-  });
-
-  if (existing) {
+  const openExisting = (convId) => {
     currentTab = 'private';
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('[data-tab="private"]').classList.add('active');
     renderConvList();
-    selectConv(existing.id);
-    return;
+    selectConv(convId);
+  };
+
+  // 1) 先查本地缓存
+  const localExisting = conversations.find(c => {
+    if (c.type !== 'private') return false;
+    const ids = c.member_ids || [];
+    return ids.includes(currentUser.id) && ids.includes(otherUser.id);
+  });
+  if (localExisting) { openExisting(localExisting.id); return; }
+
+  // 2) 再做服务端复核：取双方各自所在会话的交集中类型为 private 的会话，
+  //    避免本地列表过期或对方先建好群导致出现重复私聊窗口
+  const [{ data: mine }, { data: theirs }] = await Promise.all([
+    sb.from('conversation_members').select('conversation_id').eq('user_id', currentUser.id),
+    sb.from('conversation_members').select('conversation_id').eq('user_id', otherUser.id)
+  ]);
+  const mineSet = new Set((mine || []).map(r => r.conversation_id));
+  const commonIds = (theirs || []).map(r => r.conversation_id).filter(id => mineSet.has(id));
+  if (commonIds.length > 0) {
+    const { data: priv } = await sb.from('conversations')
+      .select('id').eq('type', 'private').in('id', commonIds).limit(1);
+    if (priv && priv.length > 0) {
+      await loadConversations();
+      openExisting(priv[0].id);
+      return;
+    }
   }
 
   // create new
@@ -2077,13 +2115,16 @@ document.getElementById('confirm-add-member-btn').addEventListener('click', asyn
     user_id: u.id
   }));
 
-  const { error } = await sb.from('conversation_members').insert(members);
+  // 用 upsert 忽略重复成员，避免某个人已在群里导致整批失败
+  const { error } = await sb.from('conversation_members')
+    .upsert(members, { onConflict: 'conversation_id,user_id', ignoreDuplicates: true });
   if (error) { errEl.textContent = '添加失败'; return; }
 
   closeModal('add-member-modal');
   await loadConversations();
-  // update header subtitle with new member count
-  updateChatHeader(conv);
+  // update header subtitle with new member count（重新取刷新后的会话对象，避免用到旧引用）
+  const updatedConv = conversations.find(c => c.id === conv.id);
+  if (updatedConv) updateChatHeader(updatedConv);
 });
 
 // ── DELETE GROUP (owner only) ──
