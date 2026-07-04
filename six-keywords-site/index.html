@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>六个关键词混成一个网页</title>
+    <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23080909"/><text x="32" y="39" text-anchor="middle" font-family="Arial" font-size="22" font-weight="800" fill="%23f2c66d">6K</text></svg>' />
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #fffaf0;
+        --muted: #d9d0bf;
+        --soft: #a8b6ba;
+        --bg: #080909;
+        --panel: rgba(16, 18, 18, 0.84);
+        --line: rgba(255, 255, 255, 0.16);
+        --line-strong: rgba(255, 255, 255, 0.28);
+        --gold: #f2c66d;
+        --mint: #80dcc6;
+        --coral: #ff7f68;
+        --aqua: #6bd3ff;
+        --green: #9fdc71;
+        --violet: #c49bff;
+        --shadow: 0 28px 90px rgba(0, 0, 0, 0.46);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 42rem),
+          #080909;
+      }
+
+      body::before {
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background:
+          linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+        background-size: 44px 44px;
+        pointer-events: none;
+        content: "";
+        mask-image: linear-gradient(180deg, #000, transparent 78%);
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      a,
+      button {
+        font: inherit;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button {
+        border: 0;
+      }
+
+      .hero {
+        position: relative;
+        display: grid;
+        align-items: end;
+        min-height: min(92svh, 880px);
+        overflow: hidden;
+        isolation: isolate;
+      }
+
+      .hero::before {
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        background:
+          linear-gradient(90deg, rgba(5, 6, 7, 0.92) 0%, rgba(5, 6, 7, 0.48) 38%, rgba(5, 6, 7, 0.18) 70%),
+          linear-gradient(0deg, #080909 0%, rgba(8, 9, 9, 0.18) 42%, rgba(8, 9, 9, 0.1) 100%),
+          url("./assets/six-keywords/hero-frog-stadium.png") center / cover;
+        content: "";
+        transform: scale(1.012);
+      }
+
+      .hero::after {
+        position: absolute;
+        inset: auto 0 0;
+        z-index: -1;
+        height: 38%;
+        background: linear-gradient(180deg, transparent, #080909);
+        content: "";
+      }
+
+      .topbar {
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        width: min(1180px, calc(100% - 32px));
+        min-height: 58px;
+        padding: 8px 10px 8px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 8px;
+        background: rgba(9, 10, 11, 0.64);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+        transform: translateX(-50%);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        flex: 0 0 auto;
+        border: 1px solid rgba(242, 198, 109, 0.72);
+        border-radius: 8px;
+        color: var(--gold);
+        background: rgba(255, 255, 255, 0.07);
+        font-weight: 900;
+      }
+
+      .brand strong,
+      .brand small {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .brand strong {
+        font-size: 0.92rem;
+      }
+
+      .brand small {
+        margin-top: 1px;
+        color: var(--muted);
+        font-size: 0.75rem;
+      }
+
+      .nav {
+        display: flex;
+        gap: 6px;
+      }
+
+      .nav a {
+        min-height: 36px;
+        padding: 9px 12px;
+        border-radius: 7px;
+        color: #efe2c3;
+        font-size: 0.82rem;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .nav a:hover,
+      .nav a:focus-visible {
+        background: rgba(242, 198, 109, 0.18);
+        outline: 1px solid rgba(242, 198, 109, 0.46);
+      }
+
+      .hero-inner {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 118px 0 58px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 14px;
+        color: var(--gold);
+        font-size: 0.78rem;
+        font-weight: 850;
+      }
+
+      .eyebrow::before {
+        width: 28px;
+        height: 2px;
+        border-radius: 999px;
+        background: currentColor;
+        content: "";
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 850px;
+        margin-bottom: 20px;
+        font-family: Georgia, "Times New Roman", "Songti SC", serif;
+        font-size: clamp(3rem, 9vw, 7.6rem);
+        line-height: 0.88;
+        letter-spacing: 0;
+        text-wrap: balance;
+      }
+
+      .hero-copy {
+        max-width: 650px;
+        margin-bottom: 26px;
+        color: #f1e7d4;
+        font-size: clamp(1rem, 1.9vw, 1.28rem);
+        line-height: 1.8;
+      }
+
+      .keyword-ribbon {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-width: 780px;
+      }
+
+      .keyword-ribbon span {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        padding: 7px 11px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff9ec;
+        font-size: 0.88rem;
+        backdrop-filter: blur(8px);
+      }
+
+      .section-hint {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        width: min(1180px, calc(100% - 32px));
+        margin: -28px auto 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(13, 15, 15, 0.9);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .hint-cell {
+        min-height: 56px;
+        padding: 12px;
+        border-right: 1px solid var(--line);
+      }
+
+      .hint-cell:last-child {
+        border-right: 0;
+      }
+
+      .hint-cell strong {
+        display: block;
+        margin-bottom: 2px;
+        font-size: 0.9rem;
+      }
+
+      .hint-cell small {
+        color: var(--soft);
+        font-size: 0.72rem;
+      }
+
+      .page {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 72px 0 80px;
+      }
+
+      .section-head {
+        display: grid;
+        grid-template-columns: minmax(0, 0.78fr) minmax(280px, 0.44fr);
+        align-items: end;
+        gap: 28px;
+        margin-bottom: 28px;
+      }
+
+      .section-head h2 {
+        margin-bottom: 0;
+        font-family: Georgia, "Times New Roman", "Songti SC", serif;
+        font-size: clamp(2rem, 5vw, 4.2rem);
+        line-height: 0.96;
+        letter-spacing: 0;
+        text-wrap: balance;
+      }
+
+      .section-head p {
+        margin-bottom: 6px;
+        color: #d8d2c4;
+        line-height: 1.72;
+      }
+
+      .remix-grid {
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr);
+        gap: 18px;
+        align-items: stretch;
+      }
+
+      .token-panel,
+      .mix-stage,
+      .story-copy,
+      .fact-card,
+      .source-grid a {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: 0 18px 70px rgba(0, 0, 0, 0.3);
+      }
+
+      .token-panel {
+        display: grid;
+        gap: 8px;
+        padding: 10px;
+      }
+
+      .token-button {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        min-height: 58px;
+        padding: 10px;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        color: var(--ink);
+        text-align: left;
+        background: rgba(255, 255, 255, 0.045);
+        cursor: pointer;
+        transition:
+          transform 180ms ease,
+          border-color 180ms ease,
+          background 180ms ease;
+      }
+
+      .token-button:hover,
+      .token-button:focus-visible,
+      .token-button.is-active {
+        border-color: var(--accent, var(--gold));
+        background: color-mix(in srgb, var(--accent, var(--gold)) 18%, rgba(255, 255, 255, 0.05));
+        outline: none;
+        transform: translateX(3px);
+      }
+
+      .token-icon {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        color: #111;
+        background: var(--accent, var(--gold));
+        font-size: 1rem;
+        font-weight: 900;
+      }
+
+      .token-button strong,
+      .token-button small {
+        display: block;
+      }
+
+      .token-button strong {
+        margin-bottom: 2px;
+      }
+
+      .token-button small {
+        color: var(--muted);
+        font-size: 0.74rem;
+        line-height: 1.35;
+      }
+
+      .mix-stage {
+        position: relative;
+        min-height: 520px;
+        overflow: hidden;
+      }
+
+      .mix-stage::before {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.02)),
+          url("./assets/six-keywords/idea-desk-frog.png") center / cover;
+        content: "";
+      }
+
+      .mix-stage::after {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 26%),
+          linear-gradient(0deg, rgba(7, 8, 8, 0.84), transparent 46%);
+        content: "";
+      }
+
+      .mix-content {
+        position: absolute;
+        inset: auto 0 0;
+        z-index: 1;
+        padding: 28px;
+      }
+
+      .mix-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        padding: 7px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 999px;
+        color: var(--accent, var(--gold));
+        background: rgba(0, 0, 0, 0.34);
+        font-size: 0.78rem;
+        font-weight: 850;
+      }
+
+      .mix-content h3 {
+        max-width: 670px;
+        margin-bottom: 10px;
+        font-size: clamp(1.7rem, 4vw, 3.2rem);
+        line-height: 1.05;
+        letter-spacing: 0;
+        text-wrap: balance;
+      }
+
+      .mix-content p {
+        max-width: 670px;
+        margin-bottom: 0;
+        color: #efe7d7;
+        font-size: 1rem;
+        line-height: 1.78;
+      }
+
+      .motion-band {
+        position: relative;
+        min-height: 360px;
+        margin-top: 66px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #111;
+        box-shadow: var(--shadow);
+      }
+
+      .motion-band img {
+        width: 100%;
+        height: 100%;
+        min-height: 360px;
+        object-fit: cover;
+      }
+
+      .motion-caption {
+        position: absolute;
+        right: 24px;
+        bottom: 22px;
+        left: 24px;
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .motion-caption h2 {
+        max-width: 680px;
+        margin-bottom: 0;
+        font-family: Georgia, "Times New Roman", "Songti SC", serif;
+        font-size: clamp(2rem, 5vw, 4.5rem);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .motion-caption p {
+        max-width: 330px;
+        margin-bottom: 8px;
+        color: #fff3dc;
+        line-height: 1.68;
+      }
+
+      .story-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+      }
+
+      .story-copy {
+        padding: 22px;
+        min-height: 220px;
+      }
+
+      .story-copy span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-bottom: 18px;
+        border-radius: 8px;
+        color: #101010;
+        background: var(--accent, var(--gold));
+        font-weight: 900;
+      }
+
+      .story-copy h3 {
+        margin-bottom: 10px;
+        font-size: 1.2rem;
+        letter-spacing: 0;
+      }
+
+      .story-copy p {
+        margin-bottom: 0;
+        color: #d8d2c4;
+        line-height: 1.72;
+      }
+
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 72px;
+      }
+
+      .fact-card {
+        min-height: 180px;
+        padding: 22px;
+      }
+
+      .fact-card strong {
+        display: inline-flex;
+        margin-bottom: 14px;
+        color: var(--accent, var(--gold));
+        font-size: 0.78rem;
+        font-weight: 900;
+      }
+
+      .fact-card h3 {
+        margin-bottom: 9px;
+        font-size: 1.24rem;
+      }
+
+      .fact-card p {
+        margin-bottom: 0;
+        color: #d8d2c4;
+        line-height: 1.72;
+      }
+
+      .sources {
+        margin-top: 72px;
+      }
+
+      .sources h2 {
+        margin-bottom: 16px;
+        font-family: Georgia, "Times New Roman", "Songti SC", serif;
+        font-size: clamp(1.9rem, 4vw, 3.3rem);
+        letter-spacing: 0;
+      }
+
+      .source-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .source-grid a {
+        display: block;
+        min-height: 122px;
+        padding: 16px;
+        transition:
+          border-color 180ms ease,
+          transform 180ms ease,
+          background 180ms ease;
+      }
+
+      .source-grid a:hover,
+      .source-grid a:focus-visible {
+        border-color: rgba(242, 198, 109, 0.7);
+        background: rgba(255, 255, 255, 0.075);
+        outline: none;
+        transform: translateY(-2px);
+      }
+
+      .source-grid strong {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .source-grid span {
+        display: block;
+        color: var(--soft);
+        font-size: 0.84rem;
+        line-height: 1.55;
+      }
+
+      .footer {
+        margin-top: 58px;
+        padding-top: 22px;
+        border-top: 1px solid var(--line);
+        color: #bfc9c5;
+        line-height: 1.7;
+      }
+
+      @media (max-width: 920px) {
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .nav {
+          width: 100%;
+          overflow-x: auto;
+          padding-bottom: 2px;
+        }
+
+        .nav a {
+          flex: 0 0 auto;
+        }
+
+        .section-hint {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .hint-cell:nth-child(3n) {
+          border-right: 0;
+        }
+
+        .hint-cell:nth-child(n + 4) {
+          border-top: 1px solid var(--line);
+        }
+
+        .section-head,
+        .remix-grid,
+        .facts {
+          grid-template-columns: 1fr;
+        }
+
+        .mix-stage {
+          min-height: 470px;
+        }
+
+        .motion-caption {
+          display: block;
+        }
+
+        .motion-caption p {
+          max-width: 620px;
+          margin-top: 12px;
+        }
+
+        .story-grid,
+        .source-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 580px) {
+        .hero {
+          min-height: 88svh;
+        }
+
+        .hero::before {
+          background:
+            linear-gradient(180deg, rgba(5, 6, 7, 0.5) 0%, rgba(5, 6, 7, 0.92) 74%),
+            url("./assets/six-keywords/hero-frog-stadium.png") 58% center / cover;
+        }
+
+        .hero-inner {
+          padding-top: 144px;
+          padding-bottom: 44px;
+        }
+
+        h1 {
+          font-size: clamp(2.6rem, 18vw, 4.8rem);
+        }
+
+        .section-hint {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .hint-cell,
+        .hint-cell:nth-child(3n) {
+          border-right: 1px solid var(--line);
+        }
+
+        .hint-cell:nth-child(2n) {
+          border-right: 0;
+        }
+
+        .hint-cell:nth-child(n + 3) {
+          border-top: 1px solid var(--line);
+        }
+
+        .page {
+          padding-top: 54px;
+        }
+
+        .token-button {
+          grid-template-columns: 30px minmax(0, 1fr);
+        }
+
+        .token-icon {
+          width: 30px;
+          height: 30px;
+        }
+
+        .mix-content {
+          padding: 20px;
+        }
+
+        .motion-band,
+        .motion-band img {
+          min-height: 430px;
+        }
+
+        .motion-caption {
+          right: 18px;
+          bottom: 18px;
+          left: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero" id="top">
+      <div class="topbar">
+        <a class="brand" href="#top" aria-label="返回页面顶部">
+          <span class="brand-mark">6K</span>
+          <span>
+            <strong>六关键词混成一个网页</strong>
+            <small>皇马 / 奶蛙 / 原神 / Phigros / 脆皮 / 想不出来</small>
+          </span>
+        </a>
+        <nav class="nav" aria-label="页面导航">
+          <a href="#remix">混音台</a>
+          <a href="#motion">视觉段落</a>
+          <a href="#facts">依据</a>
+        </nav>
+      </div>
+
+      <div class="hero-inner">
+        <p class="eyebrow">关键词实验场</p>
+        <h1>想不出来，就把六个关键词踢进同一场梦里。</h1>
+        <p class="hero-copy">
+          这里把皇马的白金球场感、奶蛙的软萌表情、原神式开放世界想象、Phigros 的动态节奏轨道、脆皮体质的易碎喜剧，做成一张会发光的灵感便签。
+        </p>
+        <div class="keyword-ribbon" aria-label="六个关键词">
+          <span>皇马</span>
+          <span>奶蛙</span>
+          <span>原神</span>
+          <span>Phigros</span>
+          <span>脆皮</span>
+          <span>想不出来</span>
+        </div>
+      </div>
+    </header>
+
+    <aside class="section-hint" aria-label="六关键词速览">
+      <div class="hint-cell"><strong>皇马</strong><small>白衣、冠军、伯纳乌式光束</small></div>
+      <div class="hint-cell"><strong>奶蛙</strong><small>奶油色、圆眼睛、表情包能量</small></div>
+      <div class="hint-cell"><strong>原神</strong><small>提瓦特式远行和元素晶体</small></div>
+      <div class="hint-cell"><strong>Phigros</strong><small>无轨谱面和动态判定线</small></div>
+      <div class="hint-cell"><strong>脆皮</strong><small>一点点裂纹，很多自嘲</small></div>
+      <div class="hint-cell"><strong>想不出来</strong><small>空白气泡也是创作入口</small></div>
+    </aside>
+
+    <main class="page">
+      <section id="remix" aria-labelledby="remix-title">
+        <div class="section-head">
+          <h2 id="remix-title">关键词混音台</h2>
+          <p>
+            每个词都不是孤岛：足球的冲刺、开放世界的远景、节奏游戏的几何谱面、网络梗的柔软表情和“脆皮”的裂纹，都可以变成同一个视觉系统里的不同声部。
+          </p>
+        </div>
+
+        <div class="remix-grid">
+          <div class="token-panel" role="tablist" aria-label="关键词切换">
+            <button class="token-button is-active" type="button" data-token="madrid" style="--accent: var(--gold)" role="tab" aria-selected="true">
+              <span class="token-icon">冠</span>
+              <span><strong>皇马</strong><small>白金、速度、冠军现场感</small></span>
+            </button>
+            <button class="token-button" type="button" data-token="frog" style="--accent: var(--green)" role="tab" aria-selected="false">
+              <span class="token-icon">蛙</span>
+              <span><strong>奶蛙</strong><small>软萌表情包，负责把荒诞变可爱</small></span>
+            </button>
+            <button class="token-button" type="button" data-token="genshin" style="--accent: var(--aqua)" role="tab" aria-selected="false">
+              <span class="token-icon">晶</span>
+              <span><strong>原神</strong><small>开放世界、元素晶体、远方岛屿</small></span>
+            </button>
+            <button class="token-button" type="button" data-token="phigros" style="--accent: var(--violet)" role="tab" aria-selected="false">
+              <span class="token-icon">谱</span>
+              <span><strong>Phigros</strong><small>动态判定线和斜着飞来的节奏</small></span>
+            </button>
+            <button class="token-button" type="button" data-token="crispy" style="--accent: var(--coral)" role="tab" aria-selected="false">
+              <span class="token-icon">裂</span>
+              <span><strong>脆皮</strong><small>轻轻一碰就碎，碎完还发光</small></span>
+            </button>
+            <button class="token-button" type="button" data-token="blank" style="--accent: var(--mint)" role="tab" aria-selected="false">
+              <span class="token-icon">空</span>
+              <span><strong>想不出来</strong><small>把空白当作下一步的舞台</small></span>
+            </button>
+          </div>
+
+          <article class="mix-stage" aria-live="polite">
+            <div class="mix-content" style="--accent: var(--gold)">
+              <span class="mix-label" id="mix-kicker">皇马声部</span>
+              <h3 id="mix-title">把“白衣军团”的速度感变成一条金色节奏轨。</h3>
+              <p id="mix-copy">
+                页面没有使用官方队徽，而是提取白、金、球场灯和冠军叙事：让足球像一枚节拍器，带着奶蛙冲进开放世界。
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="motion-band" id="motion" aria-labelledby="motion-title">
+        <img src="./assets/six-keywords/rhythm-panorama.png" alt="足球、节奏轨道、幻想岛屿和易碎金色碎片构成的原创全景图" />
+        <div class="motion-caption">
+          <h2 id="motion-title">当灵感卡壳，先让画面跑起来。</h2>
+          <p>
+            Phigros 的“线会动”变成构图原则；球、谱面、晶体和碎片都沿着同一条弯曲轨道前进。
+          </p>
+        </div>
+      </section>
+
+      <section class="story-grid" aria-label="三段视觉剧情">
+        <article class="story-copy" style="--accent: var(--gold)">
+          <span>1</span>
+          <h3>开场：冠军光</h3>
+          <p>皇马带来的是“舞台已经亮起来”的气势：白金配色、夜场灯、向前滚动的球，负责把页面推起来。</p>
+        </article>
+        <article class="story-copy" style="--accent: var(--green)">
+          <span>2</span>
+          <h3>中段：奶蛙接锅</h3>
+          <p>奶蛙站在便签墙前，像一个很认真但还是没想出来的策展人，把每个关键词用红线硬连上。</p>
+        </article>
+        <article class="story-copy" style="--accent: var(--coral)">
+          <span>3</span>
+          <h3>结尾：脆皮发光</h3>
+          <p>脆皮不是失败状态，而是一种材质：裂纹、碎屑、透明边缘，让“想不出来”也有了可看的纹理。</p>
+        </article>
+      </section>
+
+      <section class="facts" id="facts" aria-label="内容依据">
+        <article class="fact-card" style="--accent: var(--gold)">
+          <strong>皇马</strong>
+          <h3>保留精神，不复制标识</h3>
+          <p>创作中采用白金、球场灯和冠军感，而避开官方队徽、队服细节和真实赞助标识。</p>
+        </article>
+        <article class="fact-card" style="--accent: var(--aqua)">
+          <strong>原神</strong>
+          <h3>开放世界作为远景语言</h3>
+          <p>原神的核心是开放世界冒险，所以页面用浮岛、远景和元素晶体表达探索感，不使用角色或官方图形。</p>
+        </article>
+        <article class="fact-card" style="--accent: var(--violet)">
+          <strong>Phigros</strong>
+          <h3>动态谱面作为版式语言</h3>
+          <p>Phigros 的特色来自无固定轨道的节奏玩法与动态判定线，因此这里把按钮、轨道、光条都做成会偏转的视觉节奏。</p>
+        </article>
+        <article class="fact-card" style="--accent: var(--coral)">
+          <strong>脆皮 / 想不出来</strong>
+          <h3>把网络自嘲变成创作材料</h3>
+          <p>“脆皮”取自年轻人自嘲体质易伤的语境；“想不出来”则被处理为空白气泡和空白笔记本，让停顿本身成为主题。</p>
+        </article>
+      </section>
+
+      <section class="sources" aria-labelledby="sources-title">
+        <h2 id="sources-title">搜索依据</h2>
+        <div class="source-grid">
+          <a href="https://www.realmadrid.com/en-US/the-club/history" target="_blank" rel="noreferrer">
+            <strong>Real Madrid 官方历史</strong>
+            <span>用于确认皇马历史和冠军叙事，页面仅抽象化使用白金球场气质。</span>
+          </a>
+          <a href="https://genshin.hoyoverse.com/en/" target="_blank" rel="noreferrer">
+            <strong>Genshin Impact 官方站</strong>
+            <span>用于确认“开放世界冒险”的主题方向，视觉使用原创浮岛和晶体。</span>
+          </a>
+          <a href="https://www.taptap.io/app/165287" target="_blank" rel="noreferrer">
+            <strong>Phigros / Pigeon Games 页面</strong>
+            <span>用于确认 Phigros 的节奏游戏身份和动态谱面特色。</span>
+          </a>
+          <a href="http://health.people.com.cn/n1/2023/1102/c14739-40108986.html" target="_blank" rel="noreferrer">
+            <strong>人民网健康：脆皮大学生</strong>
+            <span>用于确认“脆皮”作为年轻人健康自嘲语境的来源。</span>
+          </a>
+          <a href="https://mzh.moegirl.org.cn/zh-hans/%E5%A5%B6%E9%BE%99" target="_blank" rel="noreferrer">
+            <strong>萌娘百科：奶龙相关语境</strong>
+            <span>用于把“奶蛙”作为奶系萌物和表情包式二创语境处理。</span>
+          </a>
+          <a href="https://www.bilibili.com/" target="_blank" rel="noreferrer">
+            <strong>表情包和二创社区语境</strong>
+            <span>用于确认“想不出来”更适合作为空白、词穷和二创接龙式表达，而非固定 IP。</span>
+          </a>
+        </div>
+      </section>
+
+      <footer class="footer">
+        本页视觉资产由内置 imagegen 生成并保存到项目内；内容是原创混合作品，避免使用官方 logo、真实队徽、游戏角色或官方美术素材。
+      </footer>
+    </main>
+
+    <script>
+      const tokenData = {
+        madrid: {
+          accent: "var(--gold)",
+          kicker: "皇马声部",
+          title: "把“白衣军团”的速度感变成一条金色节奏轨。",
+          copy:
+            "页面没有使用官方队徽，而是提取白、金、球场灯和冠军叙事：让足球像一枚节拍器，带着奶蛙冲进开放世界。",
+        },
+        frog: {
+          accent: "var(--green)",
+          kicker: "奶蛙声部",
+          title: "奶蛙负责把所有离谱设定都变得可以原谅。",
+          copy:
+            "它不是具体角色复刻，而是一只原创奶油色小蛙：眼神认真，脑袋空空，正好承接“想不出来”的可爱尴尬。",
+        },
+        genshin: {
+          accent: "var(--aqua)",
+          kicker: "原神声部",
+          title: "开放世界不是地图，是一种“远方还亮着”的感觉。",
+          copy:
+            "浮岛、水晶、远景瀑布和元素色彩负责提供冒险感；页面只借用开放世界语言，不使用任何官方角色或图标。",
+        },
+        phigros: {
+          accent: "var(--violet)",
+          kicker: "Phigros 声部",
+          title: "如果判定线会动，网页的节奏也可以斜着走。",
+          copy:
+            "按钮和光轨使用错位、弯曲、扫过式的动势，回应 Phigros 的动态谱面气质，让页面像一段正在演奏的谱面。",
+        },
+        crispy: {
+          accent: "var(--coral)",
+          kicker: "脆皮声部",
+          title: "脆皮不是弱，是一种会反光的边缘材质。",
+          copy:
+            "玻璃碎片、薯片状金色碎屑和裂纹，把网络自嘲转换成可视化纹理：一碰就碎，但碎得很好看。",
+        },
+        blank: {
+          accent: "var(--mint)",
+          kicker: "想不出来声部",
+          title: "空白气泡不是偷懒，是给下一秒留的接口。",
+          copy:
+            "当主题真的想不出来，就把空白放到画面中心：它会逼其他五个关键词围着它转，最后自己长出结构。",
+        },
+      };
+
+      const buttons = [...document.querySelectorAll("[data-token]")];
+      const mixContent = document.querySelector(".mix-content");
+      const kicker = document.querySelector("#mix-kicker");
+      const title = document.querySelector("#mix-title");
+      const copy = document.querySelector("#mix-copy");
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const data = tokenData[button.dataset.token];
+          buttons.forEach((item) => {
+            const active = item === button;
+            item.classList.toggle("is-active", active);
+            item.setAttribute("aria-selected", String(active));
+          });
+          mixContent.style.setProperty("--accent", data.accent);
+          kicker.textContent = data.kicker;
+          title.textContent = data.title;
+          copy.textContent = data.copy;
+        });
+      });
+    </script>
+  </body>
+</html>
