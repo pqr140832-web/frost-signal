@@ -1269,6 +1269,7 @@ let currentTab = 'private';
 let allUsers = [];
 let conversations = [];
 let pendingFiles = [];
+const MAX_UPLOAD_SIZE = 50 * 1024 * 1024; // Supabase free-tier storage cap
 let groupMembers = [];
 let addMemberList = []; // for adding members to existing group
 let realtimeSub = null;
@@ -2215,6 +2216,7 @@ async function sendMessage() {
 
 async function uploadFiles(msgId, files) {
   const result = [];
+  const failed = [];
   for (const file of files) {
     const ext = file.name.split('.').pop();
     const path = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
@@ -2225,6 +2227,7 @@ async function uploadFiles(msgId, files) {
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
+      failed.push(`${file.name}（${uploadError.message || '上传失败'}）`);
       continue;
     }
 
@@ -2237,8 +2240,16 @@ async function uploadFiles(msgId, files) {
       file_url: urlData.publicUrl,
       file_size: file.size
     };
-    await sb.from('files').insert(fileRow);
+    const { error: insertError } = await sb.from('files').insert(fileRow);
+    if (insertError) {
+      console.error('Files table insert error:', insertError);
+      failed.push(`${file.name}（${insertError.message || '记录失败'}）`);
+      continue;
+    }
     result.push(fileRow);
+  }
+  if (failed.length) {
+    alert('以下文件发送失败：\n' + failed.join('\n'));
   }
   return result;
 }
@@ -2269,6 +2280,10 @@ document.getElementById('file-input').addEventListener('change', e => {
 });
 
 function addPendingFile(file) {
+  if (file.size > MAX_UPLOAD_SIZE) {
+    alert(`"${file.name}" 太大（${(file.size / 1024 / 1024).toFixed(1)}MB），超过 50MB 上限，无法发送。`);
+    return;
+  }
   pendingFiles.push(file);
   const chip = document.createElement('div');
   chip.className = 'file-preview-chip';
