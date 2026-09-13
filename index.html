@@ -108,6 +108,27 @@
     .side-actions { display: flex; gap: 8px; padding: 10px 16px calc(12px + var(--safe-b)); border-top: 1px solid var(--line); }
     .side-actions .btn { flex: 1; }
 
+    /* 侧栏顶部夜景氛围 */
+    #sidebar { position: relative; }
+    #sidebar > * { position: relative; z-index: 1; }
+    #sidebar::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: calc(var(--safe-t) + 210px); z-index: 0; pointer-events: none;
+      background:
+        linear-gradient(180deg, transparent 62%, var(--panel) 98%),
+        radial-gradient(1px 1px at 18% 30%, rgba(255,255,255,1), transparent 70%),
+        radial-gradient(1.5px 1.5px at 42% 16%, rgba(255,255,255,.6), transparent 70%),
+        radial-gradient(1.5px 1.5px at 63% 38%, rgba(255,255,255,.7), transparent 70%),
+        radial-gradient(1px 1px at 8% 58%, rgba(255,255,255,.5), transparent 70%),
+        radial-gradient(1.5px 1.5px at 88% 12%, rgba(255,255,255,.45), transparent 70%),
+        radial-gradient(1px 1px at 31% 48%, rgba(255,255,255,.5), transparent 70%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 170' preserveAspectRatio='none'%3E%3Cpath d='M0 150 L50 118 L90 134 L150 96 L205 130 L255 108 L315 138 L360 116 L400 132 L400 170 L0 170Z' fill='%232c4478' fill-opacity='.7'/%3E%3C/svg%3E") left 0 bottom 64px / 100% 80px no-repeat,
+        linear-gradient(180deg, #0b1533 0%, #16244d 70%, #1c2a52 100%);
+    }
+    #sidebar .side-top .brand { color: #fff; text-shadow: 0 2px 14px rgba(0,0,20,.5); }
+    #sidebar .me-row .me-name { color: #fff; text-shadow: 0 1px 8px rgba(0,0,20,.6); }
+    #sidebar .me-row .icon-btn, #sidebar .side-top .icon-btn { color: rgba(255,255,255,.8); }
+    #sidebar .me-row .icon-btn:hover, #sidebar .side-top .icon-btn:hover { background: rgba(255,255,255,.1); }
+    .side-top .brand-mark { background: none; width: 26px; height: 26px; color: #fff4d2; filter: drop-shadow(0 0 6px rgba(255,236,180,.55)); }
+    .side-top .brand-mark svg { width: 22px; height: 22px; }
     .add-wrap { position: relative; }
     .side-top .brand { font-family: 'Bodoni Moda', 'Bodoni 72', 'Didot', Georgia, serif; font-style: italic; font-weight: 500; font-size: 24px; letter-spacing: .01em; }
     .add-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 132px; padding: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
@@ -402,7 +423,7 @@
 <div id="app" style="display:none">
   <aside id="sidebar">
     <div class="side-top">
-      <div class="brand"><span class="brand-mark"><svg><use href="#i-frost"/></svg></span>Frostline</div>
+      <div class="brand"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 3.2a8.5 8.5 0 1 0 5.3 13.6A7 7 0 0 1 15.5 3.2Z"/><circle cx="19" cy="5" r="1.1" opacity=".8"/><circle cx="21.2" cy="9.2" r=".7" opacity=".6"/></svg></span>Frostline</div>
       <div class="add-wrap"><button class="icon-btn" id="add-menu-btn" title="添加"><svg><use href="#i-plus"/></svg></button>
         <div class="add-menu" id="add-menu" hidden>
           <button class="add-item" id="new-private-btn"><svg><use href="#i-plus"/></svg>私聊</button>
