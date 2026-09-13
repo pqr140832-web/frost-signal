@@ -108,9 +108,33 @@
     .side-actions { display: flex; gap: 8px; padding: 10px 16px calc(12px + var(--safe-b)); border-top: 1px solid var(--line); }
     .side-actions .btn { flex: 1; }
 
+    /* 侧栏顶部夜景氛围 */
+    #sidebar { position: relative; }
+    #sidebar > * { position: relative; z-index: 1; }
+    #sidebar::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: calc(var(--safe-t) + 200px); z-index: 0; pointer-events: none;
+      background:
+        linear-gradient(180deg, transparent 45%, var(--panel) 92%),
+        radial-gradient(1px 1px at 18% 30%, rgba(255,255,255,1), transparent 70%),
+        radial-gradient(1.5px 1.5px at 42% 16%, rgba(255,255,255,.6), transparent 70%),
+        radial-gradient(1.5px 1.5px at 63% 38%, rgba(255,255,255,.7), transparent 70%),
+        radial-gradient(1px 1px at 8% 58%, rgba(255,255,255,.5), transparent 70%),
+        radial-gradient(1.5px 1.5px at 88% 12%, rgba(255,255,255,.45), transparent 70%),
+        radial-gradient(1px 1px at 31% 48%, rgba(255,255,255,.5), transparent 70%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 170' preserveAspectRatio='none'%3E%3Cpath d='M0 150 L50 118 L90 134 L150 96 L205 130 L255 108 L315 138 L360 116 L400 132 L400 170 L0 170Z' fill='%232c4478' fill-opacity='.7'/%3E%3C/svg%3E") left 0 bottom 0 / 100% 110px no-repeat,
+        linear-gradient(180deg, #0b1533 0%, #16244d 70%, #1c2a52 100%);
+    }
+    #sidebar .side-top .brand { color: #fff; text-shadow: 0 2px 14px rgba(0,0,20,.5); }
+    #sidebar .me-row .me-name { color: #fff; text-shadow: 0 1px 8px rgba(0,0,20,.6); }
+    #sidebar .me-row .icon-btn, #sidebar .side-top .icon-btn { color: rgba(255,255,255,.8); }
+    #sidebar .me-row .icon-btn:hover, #sidebar .side-top .icon-btn:hover { background: rgba(255,255,255,.1); }
     .side-top .brand-mark { background: none; width: 26px; height: 26px; color: #fff4d2; filter: drop-shadow(0 0 6px rgba(255,236,180,.55)); }
     .side-top .brand-mark svg { width: 22px; height: 22px; }
     .add-wrap { position: relative; }
+    #sidebar-tabs[hidden] { display: none; }
+    @media (max-width: 760px) { body:not(.in-chat) .edge-tint.top { background: #0b1533; } }
+    .av-wrap { position: relative; flex-shrink: 0; }
+    .group-badge { position: absolute; right: -2px; bottom: -2px; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; border: 2px solid var(--panel); }
+    .group-badge svg { width: 10px; height: 10px; }
     .side-top .brand { font-family: 'Bodoni Moda', 'Bodoni 72', 'Didot', Georgia, serif; font-style: italic; font-weight: 500; font-size: 24px; letter-spacing: .01em; }
     .add-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 132px; padding: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
     .add-menu[hidden] { display: none; }
@@ -417,7 +441,7 @@
       <div class="me-name" id="username-display"></div>
       <button class="icon-btn" id="settings-btn" title="设置"><svg><use href="#i-gear"/></svg></button>
     </div>
-    <div class="seg" id="sidebar-tabs">
+    <div class="seg" id="sidebar-tabs" hidden>
       <button class="active" data-tab="private">私聊</button>
       <button data-tab="group">群聊</button>
     </div>
@@ -1118,15 +1142,16 @@ $('sidebar-tabs').addEventListener('click', e => { const b = e.target.closest('b
 function renderConvList() {
   const list = $('conv-list');
   list.innerHTML = '';
-  const filtered = conversations.filter(c => c.type === currentTab);
+  const filtered = conversations;
   if (filtered.length === 0) {
-    list.innerHTML = `<div class="list-empty">${currentTab === 'private' ? '还没有私聊' : '还没有群聊'}</div>`;
+    list.innerHTML = `<div class="list-empty">还没有对话，点右上角加号开始</div>`;
     return;
   }
   filtered.forEach(conv => {
     const item = document.createElement('div');
     item.className = 'conv-item' + (conv.id === currentConvId ? ' active' : '');
-    item.appendChild(convAvatar(conv));
+    const av = convAvatar(conv);
+    if (conv.type === 'group') { const w = document.createElement('div'); w.className = 'av-wrap'; w.appendChild(av); w.insertAdjacentHTML('beforeend', '<span class="group-badge"><svg><use href="#i-users"/></svg></span>'); item.appendChild(w); } else item.appendChild(av);
     const info = document.createElement('div');
     info.className = 'conv-info';
     let preview = '';
