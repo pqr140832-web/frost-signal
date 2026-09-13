@@ -1042,10 +1042,16 @@ $('back-btn').addEventListener('click', () => {
 
 // ── MESSAGES ──
 const resizeObs = new ResizeObserver(() => { if (pinnedBottom) scrollToBottom(); });
+resizeObs.observe($('messages-area'));
+// 只有手指/滚轮真的动过才改 pinnedBottom，图片加载撑高内容时不算用户往上翻
+let userScrollUntil = 0;
+['touchstart', 'touchmove', 'wheel', 'keydown'].forEach(ev => $('messages-area').addEventListener(ev, () => { userScrollUntil = Date.now() + 1200; }, { passive: true }));
 $('messages-area').addEventListener('scroll', () => {
+  if (Date.now() > userScrollUntil) return;
   const a = $('messages-area');
   pinnedBottom = a.scrollHeight - a.scrollTop - a.clientHeight < 60;
 }, { passive: true });
+$('messages-area').addEventListener('load', e => { if (e.target.tagName === 'IMG' && pinnedBottom) scrollToBottom(); }, true);
 function scrollToBottom() { const a = $('messages-area'); a.scrollTop = a.scrollHeight; }
 
 async function fetchFiles(ids) {
@@ -1448,7 +1454,7 @@ $('msg-input').addEventListener('keydown', e => {
     sendMessage();
   }
 });
-function autoResize() { const i = $('msg-input'); i.style.height = ''; i.style.height = Math.min(i.scrollHeight, 140) + 'px'; }
+function autoResize() { const i = $('msg-input'); i.style.height = ''; if (!i.value || !i.scrollHeight) return; i.style.height = Math.min(i.scrollHeight, 140) + 'px'; }
 $('msg-input').addEventListener('input', () => { autoResize(); updateMentionPopup(); if ($('msg-input').value.trim()) sendTyping(true); });
 $('msg-input').addEventListener('click', updateMentionPopup);
 $('msg-input').addEventListener('blur', () => setTimeout(() => $('mention-popup').classList.remove('open'), 150));
