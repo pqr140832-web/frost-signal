@@ -2002,9 +2002,29 @@ async function registerSW() {
     });
     const sub = swReg.pushManager && await swReg.pushManager.getSubscription();
     if (sub) { pushActive = true; await saveSubscription(sub); }
+    syncPresence();
     else if ('Notification' in window && Notification.permission === 'granted') await subscribePush(true);
   } catch (e) { console.warn('SW register failed', e); }
 }
+// 在 app 里时告诉服务器别推送：可见时每 20 秒续一次 45 秒的租约，切走就清掉
+let presenceTimer = null;
+async function reportPresence(active) {
+  try {
+    if (!currentUser || !swReg || !swReg.pushManager) return;
+    const sub = await swReg.pushManager.getSubscription();
+    if (!sub) return;
+    await sb.from('push_subscriptions').update({ active_until: active ? new Date(Date.now() + 45000).toISOString() : null }).eq('endpoint', sub.endpoint);
+  } catch (e) {}
+}
+function syncPresence() {
+  clearInterval(presenceTimer);
+  if (document.visibilityState === 'visible') {
+    reportPresence(true);
+    presenceTimer = setInterval(() => reportPresence(true), 20000);
+  } else reportPresence(false);
+}
+document.addEventListener('visibilitychange', syncPresence);
+addEventListener('pagehide', () => reportPresence(false));
 function urlB64ToUint8(b64) {
   const p = '='.repeat((4 - b64.length % 4) % 4);
   const raw = atob((b64 + p).replace(/-/g, '+').replace(/_/g, '/'));
@@ -2030,6 +2050,7 @@ async function subscribePush(silent) {
     if (!sub) sub = await swReg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8(VAPID_PUBLIC) });
     await saveSubscription(sub);
     pushActive = true;
+    syncPresence();
     if (!silent) toast('通知已开启');
     return true;
   } catch (e) {
