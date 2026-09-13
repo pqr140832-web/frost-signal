@@ -262,6 +262,10 @@
     .error-msg { color: var(--danger); font-size: 13px; min-height: 18px; }
     .modal-bg { position: fixed; inset: 0; background: rgba(10,15,25,.42); z-index: 200; display: none; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(2px); }
     .modal-bg.open { display: flex; }
+    #crop-modal { z-index: 210; }
+    .crop-stage { position: relative; width: 100%; aspect-ratio: 1; max-width: 320px; margin: 0 auto; border-radius: 16px; overflow: hidden; background: #111; touch-action: none; cursor: grab; }
+    .crop-stage canvas { width: 100%; height: 100%; display: block; }
+    .crop-zoom { width: 100%; accent-color: var(--accent); }
     .modal { background: var(--panel); border-radius: 22px; box-shadow: var(--shadow-lg); width: 100%; max-width: 400px; padding: 22px; display: flex; flex-direction: column; gap: 12px; max-height: 88dvh; overflow-y: auto; animation: pop .15s ease; }
     .modal h2 { font-size: 18px; font-weight: 600; }
     .modal p { font-size: 14px; color: var(--text2); line-height: 1.6; }
@@ -464,6 +468,17 @@
   </div>
 </div>
 
+<!-- avatar crop -->
+<div class="modal-bg" id="crop-modal">
+  <div class="modal">
+    <div class="modal-head"><h2>选择头像区域</h2><button class="icon-btn" id="crop-cancel"><svg><use href="#i-x"/></svg></button></div>
+    <div class="crop-stage" id="crop-stage"><canvas id="crop-canvas" width="640" height="640"></canvas></div>
+    <input type="range" class="crop-zoom" id="crop-zoom" min="1" max="4" step="0.01" value="1">
+    <p style="text-align:center;font-size:13px">拖动移动，双指或滑条缩放</p>
+    <button class="btn" id="crop-ok">确定</button>
+  </div>
+</div>
+
 <!-- settings / profile -->
 <div class="modal-bg" id="settings-modal">
   <div class="modal">
@@ -645,7 +660,7 @@ function formatSize(b) {
 function openModal(id) { $(id).classList.add('open'); }
 function closeModal(id) { $(id).classList.remove('open'); }
 document.querySelectorAll('.modal-bg').forEach(bg => {
-  bg.addEventListener('click', e => { if (e.target === bg && bg.id !== 'auth-modal') bg.classList.remove('open'); });
+  bg.addEventListener('click', e => { if (e.target === bg && bg.id !== 'auth-modal' && bg.id !== 'crop-modal') bg.classList.remove('open'); });
   bg.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => bg.classList.remove('open')));
 });
 let toastTimer = null;
@@ -814,10 +829,11 @@ $('avatar-input').addEventListener('change', async e => {
   if (!file) return;
   if (!file.type.startsWith('image/')) { toast('请选择图片文件', true); return; }
   try {
+    const blob = await cropAvatar(file);
+    if (!blob) return;
     toast('正在上传头像…');
-    const blob = await resizeImage(file, 400);
-    const path = `avatars/${currentUser.id}_${Date.now()}.jpg`;
-    const { error } = await sb.storage.from('chat-files').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+    const path = `avatars/${currentUser.id}_${Date.now()}.png`;
+    const { error } = await sb.storage.from('chat-files').upload(path, blob, { contentType: 'image/png', upsert: true });
     if (error) throw error;
     const url = sb.storage.from('chat-files').getPublicUrl(path).data.publicUrl;
     const { error: e2 } = await sb.from('users').update({ avatar_url: url }).eq('id', currentUser.id);
@@ -834,6 +850,68 @@ $('avatar-input').addEventListener('change', async e => {
     toast('头像上传失败：' + (err.message || err), true);
   }
 });
+function cropAvatar(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onerror = () => reject(new Error('无法读取图片'));
+    img.onload = () => {
+      const cv = $('crop-canvas'), ctx = cv.getContext('2d'), S = cv.width, R = S * 0.42;
+      const base = (2 * R) / Math.min(img.width, img.height);
+      let zoom = 1, cx = S / 2, cy = S / 2; // 图片中心在画布上的位置
+      const scale = () => base * zoom;
+      const clamp = () => {
+        const w = img.width * scale() / 2, h = img.height * scale() / 2;
+        cx = Math.min(S / 2 - R + w, Math.max(S / 2 + R - w, cx));
+        cy = Math.min(S / 2 - R + h, Math.max(S / 2 + R - h, cy));
+      };
+      const draw = () => {
+        clamp();
+        const w = img.width * scale(), h = img.height * scale();
+        ctx.clearRect(0, 0, S, S);
+        ctx.drawImage(img, cx - w / 2, cy - h / 2, w, h);
+        ctx.save(); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.beginPath(); ctx.rect(0, 0, S, S); ctx.arc(S / 2, S / 2, R, 0, Math.PI * 2, true); ctx.fill('evenodd');
+        ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(S / 2, S / 2, R, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      };
+      const setZoom = z => { zoom = Math.min(4, Math.max(1, z)); $('crop-zoom').value = zoom; draw(); };
+      const stage = $('crop-stage'), zoomEl = $('crop-zoom');
+      const pts = new Map(); let pinch = null;
+      const k = () => S / stage.clientWidth;
+      const down = e => { stage.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]); pinch = null; };
+      const move = e => {
+        if (!pts.has(e.pointerId)) return;
+        const prev = pts.get(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
+        if (pts.size === 1) { cx += (e.clientX - prev[0]) * k(); cy += (e.clientY - prev[1]) * k(); draw(); }
+        else { const [a, b] = [...pts.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pinch) setZoom(zoom * d / pinch); pinch = d; }
+      };
+      const up = e => { pts.delete(e.pointerId); pinch = null; };
+      const wheel = e => { e.preventDefault(); setZoom(zoom * (e.deltaY < 0 ? 1.08 : 1 / 1.08)); };
+      const slide = () => setZoom(+zoomEl.value);
+      const done = result => {
+        stage.removeEventListener('pointerdown', down); stage.removeEventListener('pointermove', move);
+        stage.removeEventListener('pointerup', up); stage.removeEventListener('pointercancel', up);
+        stage.removeEventListener('wheel', wheel); zoomEl.removeEventListener('input', slide);
+        $('crop-ok').onclick = $('crop-cancel').onclick = null;
+        $('crop-modal').classList.remove('open');
+        URL.revokeObjectURL(img.src);
+        resolve(result);
+      };
+      stage.addEventListener('pointerdown', down); stage.addEventListener('pointermove', move);
+      stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+      stage.addEventListener('wheel', wheel, { passive: false }); zoomEl.addEventListener('input', slide);
+      $('crop-cancel').onclick = () => done(null);
+      $('crop-ok').onclick = () => {
+        const out = document.createElement('canvas'), size = 400, f = size / (2 * R);
+        out.width = out.height = size;
+        const w = img.width * scale() * f, h = img.height * scale() * f;
+        out.getContext('2d').drawImage(img, (cx - (S / 2 - R)) * f - w / 2, (cy - (S / 2 - R)) * f - h / 2, w, h);
+        out.toBlob(b => done(b), 'image/png');
+      };
+      setZoom(1);
+      $('crop-modal').classList.add('open');
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
 function resizeImage(file, size) {
   return new Promise((resolve, reject) => {
     const img = new Image();
