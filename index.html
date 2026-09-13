@@ -402,7 +402,6 @@
   <aside id="sidebar">
     <div class="side-top">
       <div class="brand"><span class="brand-mark"><svg><use href="#i-frost"/></svg></span>Frostline</div>
-      <button class="icon-btn" id="new-chat-btn" title="新建"><svg><use href="#i-plus"/></svg></button>
     </div>
     <div class="me-row">
       <div id="my-avatar"></div>
@@ -1967,7 +1966,6 @@ function renderChips(box, arr, rerender) {
 $('add-menu-btn').addEventListener('click', e => { e.stopPropagation(); $('add-menu').hidden = !$('add-menu').hidden; });
 document.addEventListener('click', e => { if (!e.target.closest('.add-wrap')) $('add-menu').hidden = true; });
 $('add-menu').addEventListener('click', e => { if (e.target.closest('.add-item')) $('add-menu').hidden = true; });
-$('new-chat-btn').addEventListener('click', () => currentTab === 'group' ? openNewGroup() : openNewPrivate());
 $('new-private-btn').addEventListener('click', openNewPrivate);
 function openNewPrivate() {
   $('private-search').value = '';
