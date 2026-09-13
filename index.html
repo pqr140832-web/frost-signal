@@ -108,6 +108,13 @@
     .side-actions { display: flex; gap: 8px; padding: 10px 16px calc(12px + var(--safe-b)); border-top: 1px solid var(--line); }
     .side-actions .btn { flex: 1; }
 
+    .add-wrap { position: relative; }
+    .add-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 132px; padding: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
+    .add-menu[hidden] { display: none; }
+    #conv-list { padding-bottom: var(--safe-b); }
+    .add-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; color: var(--text); font-size: 14px; text-align: left; }
+    .add-item:hover, .add-item:active { background: var(--hover); }
+    .add-item svg { width: 18px; height: 18px; color: var(--text2); }
     .me-row { display: flex; align-items: center; gap: 10px; padding: 8px 16px 12px; }
     .me-row .me-name { flex: 1; font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 
@@ -400,6 +407,12 @@
     <div class="me-row">
       <div id="my-avatar"></div>
       <div class="me-name" id="username-display"></div>
+      <div class="add-wrap"><button class="icon-btn" id="add-menu-btn" title="添加"><svg><use href="#i-plus"/></svg></button>
+        <div class="add-menu" id="add-menu" hidden>
+          <button class="add-item" id="new-private-btn"><svg><use href="#i-plus"/></svg>私聊</button>
+          <button class="add-item" id="new-group-btn"><svg><use href="#i-users"/></svg>建群</button>
+          <button class="add-item" id="join-group-btn"><svg><use href="#i-hash"/></svg>加群</button>
+        </div></div>
       <button class="icon-btn" id="settings-btn" title="设置"><svg><use href="#i-gear"/></svg></button>
     </div>
     <div class="seg" id="sidebar-tabs">
@@ -407,11 +420,6 @@
       <button data-tab="group">群聊</button>
     </div>
     <div id="conv-list"></div>
-    <div class="side-actions">
-      <button class="btn btn-ghost" id="new-private-btn"><svg><use href="#i-plus"/></svg>私聊</button>
-      <button class="btn btn-ghost" id="new-group-btn"><svg><use href="#i-users"/></svg>建群</button>
-      <button class="btn btn-ghost" id="join-group-btn"><svg><use href="#i-hash"/></svg>加群</button>
-    </div>
   </aside>
 
   <main id="main">
@@ -1957,6 +1965,9 @@ function renderChips(box, arr, rerender) {
 }
 
 // new chat button (sidebar top) → depends on tab
+$('add-menu-btn').addEventListener('click', e => { e.stopPropagation(); $('add-menu').hidden = !$('add-menu').hidden; });
+document.addEventListener('click', e => { if (!e.target.closest('.add-wrap')) $('add-menu').hidden = true; });
+$('add-menu').addEventListener('click', e => { if (e.target.closest('.add-item')) $('add-menu').hidden = true; });
 $('new-chat-btn').addEventListener('click', () => currentTab === 'group' ? openNewGroup() : openNewPrivate());
 $('new-private-btn').addEventListener('click', openNewPrivate);
 function openNewPrivate() {
