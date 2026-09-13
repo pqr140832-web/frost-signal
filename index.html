@@ -1026,6 +1026,8 @@ function applyTheme() {
 function syncThemeColor() {
   const bg = getComputedStyle(document.documentElement).getPropertyValue('--panel').trim();
   document.querySelectorAll('meta[name="theme-color"]').forEach(m => { m.removeAttribute('media'); m.content = bg; });
+  // Safari 不会在变量变了之后重新取栏颜色，换一份新节点逼它重取
+  document.querySelectorAll('.edge-tint').forEach(el => { const c = el.cloneNode(); el.remove(); requestAnimationFrame(() => document.body.prepend(c)); });
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncThemeColor);
 function syncThemeSeg() { const t = getTheme(); $('theme-seg').querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.t === t)); }
