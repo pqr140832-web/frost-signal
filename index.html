@@ -785,7 +785,10 @@ function showAuth() { $('app').style.display = 'none'; document.documentElement.
 
 async function enterApp() {
   $('app').style.display = 'flex';
+  const fromAuth = document.documentElement.classList.contains('auth');
   document.documentElement.classList.remove('auth'); syncThemeColor();
+  // 刚从登录页进来，iOS Safari 顶栏还是登录页的蓝，刷新一次（会话已存，刷新后直接进）
+  if (fromAuth && /iP(hone|ad|od)/.test(navigator.userAgent) && matchMedia('(display-mode: browser)').matches) { location.reload(); return; }
   closeModal('auth-modal');
   await loadAllUsers();
   updateUserInfo();
@@ -1016,7 +1019,7 @@ $('logout-btn').addEventListener('click', async () => {
 });
 
 // ── THEME ──
-function getTheme() { try { return localStorage.getItem('frostline_theme') || 'system'; } catch (e) { return 'system'; } }
+function getTheme() { try { return localStorage.getItem('frostline_theme') || 'dark'; } catch (e) { return 'dark'; } }
 function applyTheme() {
   const t = getTheme();
   if (t === 'system') delete document.documentElement.dataset.theme;
