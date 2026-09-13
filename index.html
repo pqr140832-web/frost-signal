@@ -284,7 +284,7 @@
     .member-remove { font-size: 12px; color: var(--danger); padding: 4px 10px; border-radius: 8px; }
     .member-remove:hover { background: var(--danger-soft); }
 
-    html.auth { background: #09112a; }
+    html.auth, html.auth body { background: #1a2140 !important; }
     .auth-bg { background: #0b1533 !important; backdrop-filter: none !important; overflow: hidden; align-items: stretch !important; padding: 0 20px !important; }
     .auth-scene { position: absolute; inset: 0; width: 100%; height: 100%; }
     .auth-bg::after { content: ""; position: absolute; inset: -50% 0 0; pointer-events: none; background-image: radial-gradient(2.5px 2.5px at 20px 30px, #fff, transparent), radial-gradient(2px 2px at 90px 120px, rgba(255,255,255,.85), transparent), radial-gradient(3px 3px at 160px 60px, rgba(255,255,255,.9), transparent), radial-gradient(2px 2px at 230px 170px, rgba(255,255,255,.75), transparent); background-size: 260px 200px; opacity: .7; animation: snowfall 20s linear infinite; }
@@ -292,7 +292,7 @@
     @media (prefers-reduced-motion: reduce) { .auth-bg::after { animation: none; } }
     .auth-bg::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to bottom, transparent 36%, rgba(9,17,42,.55) 56%, rgba(9,17,42,.9) 100%); }
     .auth-bg .auth-scene { z-index: 0; }
-    .auth-card { position: relative; z-index: 2; align-self: stretch; margin: 0 auto; width: 100%; max-width: 360px !important; max-height: none !important; height: 100%; padding: calc(12.5vh + var(--safe-t)) 8px 0 !important; gap: 12px; background: transparent !important; box-shadow: none !important; border: 0; border-radius: 0 !important; color: #fff; overflow: visible !important; animation: none !important; }
+    .auth-card { position: relative; z-index: 2; align-self: stretch; margin: 0 auto; width: 100%; max-width: 360px !important; max-height: none !important; height: 100%; padding: calc(5vh + var(--safe-t)) 8px 0 !important; gap: 12px; background: transparent !important; box-shadow: none !important; border: 0; border-radius: 0 !important; color: #fff; overflow: visible !important; animation: none !important; }
     .auth-brand { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: auto; text-shadow: 0 2px 16px rgba(0,0,20,.5); }
     .auth-brand .brand-mark { display: none; }
     .auth-brand h1 { font-family: 'Bodoni Moda', 'Bodoni 72', 'Didot', Georgia, serif; font-style: italic; font-size: 52px; font-weight: 500; letter-spacing: .01em; line-height: 1; color: #fff; }
@@ -304,7 +304,7 @@
     .auth-card .field::placeholder { color: rgba(255,255,255,.6); }
     .auth-card .field:focus { border-color: rgba(255,255,255,.7); background: rgba(255,255,255,.18); }
     .auth-card .error-msg { color: #ffb4b8; text-align: center; }
-    #auth-submit-btn { border-radius: 999px; background: #fff !important; color: #1b2a52 !important; font-weight: 600; padding: 13px !important; box-shadow: 0 8px 24px rgba(0,0,20,.35); margin-bottom: calc(11vh + var(--safe-b)); }
+    #auth-submit-btn { border-radius: 999px; background: #fff !important; color: #1b2a52 !important; font-weight: 600; padding: 13px !important; box-shadow: 0 8px 24px rgba(0,0,20,.35); margin-bottom: calc(4vh + var(--safe-b)); }
 
     .profile-top { display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .avatar-edit { position: relative; cursor: pointer; }
@@ -487,7 +487,7 @@
   <circle cx="338" cy="72" r="80" fill="url(#as-moon)"/>
   <circle cx="338" cy="72" r="24" fill="#fff4d2"/>
   <circle cx="330" cy="66" r="4" fill="#f1e2b8" opacity=".6"/><circle cx="346" cy="80" r="3" fill="#f1e2b8" opacity=".6"/>
-<g transform="translate(0 -195)">
+<g transform="translate(0 -140)">
   <path d="M0 500 L40 470 L80 488 L130 440 L185 478 L240 452 L300 485 L350 458 L400 476 L400 860 L0 860Z" fill="url(#as-far)" opacity=".7"/>
   <path d="M0 540 L60 450 L105 492 L170 380 L230 470 L275 425 L340 505 L400 452 L400 860 L0 860Z" fill="url(#as-mtn)"/>
   <path d="M170 380 L230 470 L200 520 L185 470Z M60 450 L105 492 L90 530 L72 488Z M275 425 L340 505 L318 540 L292 480Z" fill="#1f2e5c" opacity=".45"/>
@@ -497,7 +497,7 @@
   
   <g transform="translate(40 600)"><rect x="-2" y="-4" width="4" height="8" fill="#2a2030"/><polygon points="0,-70 -17.325000000000003,-31.5 17.325000000000003,-31.5" fill="#2b3d6e"/><polygon points="0,-50.4 -25.200000000000003,-7.0 25.200000000000003,-7.0" fill="#2b3d6e"/><polygon points="0,-31.5 -31.5,0 31.5,0" fill="#2b3d6e"/><polygon points="0,-70 -7.875,-51.8 7.875,-51.8" fill="#eaf2ff"/><path d="M-25.200000000000003,-7.0 q12.600000000000001,-5.6000000000000005 25.200000000000003,-1.4000000000000001 q12.600000000000001,4.2 25.200000000000003,0" fill="none" stroke="#eaf2ff" stroke-width="2.5" stroke-linecap="round"/></g><g transform="translate(75 590)"><rect x="-2" y="-4" width="4" height="8" fill="#2a2030"/><polygon points="0,-50 -12.375000000000002,-22.5 12.375000000000002,-22.5" fill="#2b3d6e"/><polygon points="0,-36.0 -18.0,-5.0 18.0,-5.0" fill="#2b3d6e"/><polygon points="0,-22.5 -22.5,0 22.5,0" fill="#2b3d6e"/><polygon points="0,-50 -5.625,-37.0 5.625,-37.0" fill="#eaf2ff"/><path d="M-18.0,-5.0 q9.0,-4.0 18.0,-1.0 q9.0,3.0 18.0,0" fill="none" stroke="#eaf2ff" stroke-width="2.5" stroke-linecap="round"/></g><g transform="translate(360 582)"><rect x="-2" y="-4" width="4" height="8" fill="#2a2030"/><polygon points="0,-60 -14.850000000000001,-27.0 14.850000000000001,-27.0" fill="#2b3d6e"/><polygon points="0,-43.199999999999996 -21.6,-6.0 21.6,-6.0" fill="#2b3d6e"/><polygon points="0,-27.0 -27.0,0 27.0,0" fill="#2b3d6e"/><polygon points="0,-60 -6.75,-44.4 6.75,-44.4" fill="#eaf2ff"/><path d="M-21.6,-6.0 q10.8,-4.8 21.6,-1.2 q10.8,3.5999999999999996 21.6,0" fill="none" stroke="#eaf2ff" stroke-width="2.5" stroke-linecap="round"/></g>
   <path d="M0 690 C90 640 180 650 260 680 C320 700 360 670 400 665 L400 860 L0 860Z" fill="url(#as-snow)"/>
-  <g transform="translate(250 668)">
+  <g transform="translate(250 640) scale(.85)">
     <circle cx="0" cy="-14" r="38" fill="url(#as-win)"/>
     <rect x="-26" y="-30" width="52" height="34" fill="#4a3346"/>
     <polygon points="-34,-28 0,-56 34,-28" fill="#eef4fc"/>
