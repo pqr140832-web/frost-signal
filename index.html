@@ -109,6 +109,7 @@
     .side-actions .btn { flex: 1; }
 
     .add-wrap { position: relative; }
+    .side-top .brand { font-family: 'Bodoni Moda', 'Bodoni 72', 'Didot', Georgia, serif; font-style: italic; font-weight: 500; font-size: 24px; letter-spacing: .01em; }
     .add-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 132px; padding: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; }
     .add-menu[hidden] { display: none; }
     #conv-list { padding-bottom: var(--safe-b); }
@@ -402,16 +403,16 @@
   <aside id="sidebar">
     <div class="side-top">
       <div class="brand"><span class="brand-mark"><svg><use href="#i-frost"/></svg></span>Frostline</div>
-    </div>
-    <div class="me-row">
-      <div id="my-avatar"></div>
-      <div class="me-name" id="username-display"></div>
       <div class="add-wrap"><button class="icon-btn" id="add-menu-btn" title="添加"><svg><use href="#i-plus"/></svg></button>
         <div class="add-menu" id="add-menu" hidden>
           <button class="add-item" id="new-private-btn"><svg><use href="#i-plus"/></svg>私聊</button>
           <button class="add-item" id="new-group-btn"><svg><use href="#i-users"/></svg>建群</button>
           <button class="add-item" id="join-group-btn"><svg><use href="#i-hash"/></svg>加群</button>
         </div></div>
+    </div>
+    <div class="me-row">
+      <div id="my-avatar"></div>
+      <div class="me-name" id="username-display"></div>
       <button class="icon-btn" id="settings-btn" title="设置"><svg><use href="#i-gear"/></svg></button>
     </div>
     <div class="seg" id="sidebar-tabs">
