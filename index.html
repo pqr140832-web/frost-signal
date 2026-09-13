@@ -2001,8 +2001,7 @@ async function registerSW() {
       if (e.data && e.data.type === 'open-conv') openConvFromNotification(e.data.conv_id);
     });
     const sub = swReg.pushManager && await swReg.pushManager.getSubscription();
-    if (sub) { pushActive = true; await saveSubscription(sub); }
-    syncPresence();
+    if (sub) { pushActive = true; await saveSubscription(sub); syncPresence(); }
     else if ('Notification' in window && Notification.permission === 'granted') await subscribePush(true);
   } catch (e) { console.warn('SW register failed', e); }
 }
