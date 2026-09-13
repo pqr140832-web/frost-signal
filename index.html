@@ -285,6 +285,9 @@
     .member-remove:hover { background: var(--danger-soft); }
 
     html.auth, html.auth body { background: #1f273f !important; }
+    /* iOS 主屏幕模式下 fixed 层有时到不了屏幕最底，往下多铺一截，内容用 padding 顶回来 */
+    .auth-bg { bottom: -120px !important; }
+    .auth-bg .auth-card { padding-bottom: 120px !important; }
     .auth-bg { background: #0b1533 !important; backdrop-filter: none !important; overflow: hidden; align-items: stretch !important; padding: 0 20px !important; }
     .auth-scene { position: absolute; inset: 0; width: 100%; height: 100%; }
     .auth-bg::after { content: ""; position: absolute; inset: -50% 0 0; pointer-events: none; background-image: radial-gradient(2.5px 2.5px at 20px 30px, #fff, transparent), radial-gradient(2px 2px at 90px 120px, rgba(255,255,255,.85), transparent), radial-gradient(3px 3px at 160px 60px, rgba(255,255,255,.9), transparent), radial-gradient(2px 2px at 230px 170px, rgba(255,255,255,.75), transparent); background-size: 260px 200px; opacity: .7; animation: snowfall 20s linear infinite; }
