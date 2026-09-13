@@ -279,7 +279,7 @@
     .modal p { font-size: 14px; color: var(--text2); line-height: 1.6; }
     .modal-head { display: flex; align-items: center; justify-content: space-between; }
     .btn-row { display: flex; gap: 8px; justify-content: flex-end; }
-    .pick-list { max-height: 240px; overflow-y: auto; margin: 0 -6px; }
+    .pick-list { max-height: 50dvh; overflow-y: auto; margin: 0 -6px; }
     .pick-list:empty { display: none; }
     .member-chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .member-chips:empty { display: none; }
@@ -1941,10 +1941,9 @@ function openMembersPanel() {
 function renderPicker(listEl, query, excludeIds, onPick, tagFor) {
   listEl.innerHTML = '';
   const q = query.trim().toLowerCase();
-  if (!q) return;
   const users = pickableUsers().filter(u => u.username.toLowerCase().includes(q) && !excludeIds.includes(u.id));
   if (!users.length) { listEl.innerHTML = '<div class="list-empty" style="padding:16px">没有找到用户</div>'; return; }
-  users.slice(0, 30).forEach(u => {
+  users.slice(0, 80).forEach(u => {
     const item = document.createElement('div');
     item.className = 'pick-item';
     item.appendChild(makeAvatar(u.username, u.avatar_url, 'sm'));
@@ -1972,14 +1971,14 @@ $('new-chat-btn').addEventListener('click', () => currentTab === 'group' ? openN
 $('new-private-btn').addEventListener('click', openNewPrivate);
 function openNewPrivate() {
   $('private-search').value = '';
-  $('private-user-list').innerHTML = '';
+  renderPicker($('private-user-list'), '', [], startPrivateChat, privateTag);
   openModal('new-private-modal');
-  setTimeout(() => $('private-search').focus(), 50);
 }
-$('private-search').addEventListener('input', e => renderPicker($('private-user-list'), e.target.value, [], startPrivateChat, u => {
+function privateTag(u) {
   const has = conversations.some(c => c.type === 'private' && c.member_ids.includes(u.id));
   return `<span class="pi-tag ${has ? '' : 'go'}">${has ? '打开' : '发起'}</span>`;
-}));
+}
+$('private-search').addEventListener('input', e => renderPicker($('private-user-list'), e.target.value, [], startPrivateChat, privateTag));
 
 async function startPrivateChat(other) {
   closeModal('new-private-modal');
