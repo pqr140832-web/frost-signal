@@ -1025,7 +1025,7 @@ function applyTheme() {
 }
 function syncThemeColor() {
   const bg = getComputedStyle(document.documentElement).getPropertyValue('--panel').trim();
-  document.querySelectorAll('meta[name="theme-color"]').forEach(m => { m.removeAttribute('media'); m.content = bg; });
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m => { const n = document.createElement('meta'); n.name = 'theme-color'; n.content = bg; m.replaceWith(n); });
   // Safari 不会在变量变了之后重新取栏颜色，换一份新节点逼它重取
   document.querySelectorAll('.edge-tint').forEach(el => { const c = el.cloneNode(); el.remove(); requestAnimationFrame(() => document.body.prepend(c)); });
 }
