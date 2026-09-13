@@ -1035,6 +1035,8 @@ $('theme-seg').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   try { localStorage.setItem('frostline_theme', b.dataset.t); } catch (err) {}
   applyTheme(); syncThemeSeg();
+  // iOS Safari 顶栏颜色只在加载时读，网页版切主题直接重载一下
+  if (/iP(hone|ad|od)/.test(navigator.userAgent) && matchMedia('(display-mode: browser)').matches) setTimeout(() => location.reload(), 150);
 });
 
 // ── LOAD DATA ──
