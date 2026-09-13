@@ -8,7 +8,7 @@ self.addEventListener('push', event => {
   try { data = event.data ? event.data.json() : {}; } catch (e) { data = { title: '霜信', body: event.data ? event.data.text() : '' }; }
   event.waitUntil((async () => {
     const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    if (clients.some(c => c.visibilityState === 'visible' && c.focused)) return;
+    if (clients.some(c => c.visibilityState === 'visible')) return;
     await self.registration.showNotification(data.title || '新消息', {
       body: data.body || '',
       tag: data.conv_id || 'frostline',
