@@ -1676,8 +1676,10 @@ async function loadStickers() {
   stickerList = await res.json();
   return stickerList;
 }
+let stickerPanelReady = false;
 async function renderStickerPanel() {
   const panel = $('sticker-panel');
+  if (stickerPanelReady) return;
   panel.innerHTML = '<div class="sp-empty">加载中…</div>';
   try {
     const list = await loadStickers();
@@ -1685,10 +1687,11 @@ async function renderStickerPanel() {
     list.forEach(st => {
       const b = document.createElement('button');
       b.title = st.id;
-      b.innerHTML = `<img loading="lazy" src="${STICKER_BASE}/s/${encodeURIComponent(st.file)}" alt="${escHtml(st.id)}">`;
+      b.innerHTML = `<img decoding="async" src="${STICKER_BASE}/t/${encodeURIComponent(st.file)}" alt="${escHtml(st.id)}">`;
       b.addEventListener('click', () => sendSticker(st.id));
       panel.appendChild(b);
     });
+    stickerPanelReady = true;
   } catch (e) {
     panel.innerHTML = '<div class="sp-empty">表情加载失败</div>';
   }
