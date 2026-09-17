@@ -259,6 +259,8 @@
     .fp-chip button { width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; color: var(--text3); }
     .fp-chip button:hover { background: var(--hover); color: var(--danger); }
     .composer-row { display: flex; align-items: flex-end; gap: 6px; }
+    #sticker-btn + #file-btn { margin-left: -6px; }
+    #sticker-btn + #file-btn + #file-input + textarea { margin-left: 2px; }
     #msg-input { flex: 1; resize: none; border: 1px solid var(--line); background: var(--panel2); border-radius: 20px; padding: 9px 14px; outline: none; max-height: 140px; line-height: 1.45; font-size: 15px; transition: border-color .15s; }
     #msg-input:focus { border-color: var(--accent); background: var(--panel); }
     #send-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; transition: transform .1s, opacity .15s; }
@@ -419,6 +421,7 @@
   <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
   <symbol id="i-dots" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></symbol>
   <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+  <symbol id="i-smile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.2 4.2 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></symbol>
   <symbol id="i-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 11-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l9-9a3.7 3.7 0 0 1 5.2 5.2l-9 9a1.8 1.8 0 0 1-2.6-2.6l8.3-8.3"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="i-reply" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v5"/></symbol>
@@ -483,8 +486,8 @@
       <div id="file-previews"></div>
       <div id="sticker-panel"></div>
       <div class="composer-row">
-        <button class="icon-btn" id="sticker-btn" title="表情" style="width:40px;height:40px;font-size:19px">☺</button>
-        <button class="icon-btn" id="file-btn" title="发送文件" style="width:40px;height:40px"><svg><use href="#i-clip"/></svg></button>
+        <button class="icon-btn" id="sticker-btn" title="表情" style="width:32px;height:40px"><svg><use href="#i-smile"/></svg></button>
+        <button class="icon-btn" id="file-btn" title="发送文件" style="width:32px;height:40px"><svg><use href="#i-clip"/></svg></button>
         <input type="file" id="file-input" multiple hidden>
         <textarea id="msg-input" rows="1" placeholder="发送消息…"></textarea>
         <button id="send-btn" title="发送"><svg><use href="#i-send"/></svg></button>
