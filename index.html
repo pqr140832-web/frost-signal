@@ -103,6 +103,10 @@
     .conv-name { flex: 1; font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .conv-time { font-size: 12px; color: var(--text3); flex-shrink: 0; }
     .conv-preview { font-size: 13px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; flex: 1; }
+    .conv-item.pinned { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+    .conv-item.pinned:hover { background: var(--hover); }
+    .conv-mute { width: 14px; height: 14px; stroke: var(--text2); fill: none; flex-shrink: 0; }
+    .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text2); flex-shrink: 0; }
     .unread-badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--danger); color: #fff; font-size: 12px; font-weight: 600; display: grid; place-items: center; flex-shrink: 0; }
     .list-empty { padding: 40px 12px; text-align: center; font-size: 13px; color: var(--text3); }
     .side-actions { display: flex; gap: 8px; padding: 10px 16px calc(12px + var(--safe-b)); border-top: 1px solid var(--line); }
@@ -437,6 +441,10 @@
   <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
   <symbol id="i-hash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/></symbol>
   <symbol id="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z"/></symbol>
+  <symbol id="i-unpin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z"/><path d="M3 3l18 18"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-bell-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/><path d="M3 3l18 18"/></symbol>
   <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
 </svg>
 
@@ -1113,7 +1121,7 @@ async function loadConversations() {
   if (convLoading) return;
   convLoading = true;
   try {
-    const { data: memberRows } = await sb.from('conversation_members').select('conversation_id').eq('user_id', currentUser.id);
+    const { data: memberRows } = await sb.from('conversation_members').select('conversation_id,muted,pinned').eq('user_id', currentUser.id);
     if (!memberRows) return;
     if (memberRows.length === 0) { conversations = []; renderConvList(); if (currentConvId) resetChatView(); return; }
     const ids = memberRows.map(r => r.conversation_id);
@@ -1134,11 +1142,15 @@ async function loadConversations() {
         unreadMap[m.conversation_id] = (unreadMap[m.conversation_id] || 0) + 1;
     });
     if (Object.values(memberMap).flat().some(id => !userById(id))) await loadAllUsers();
+    const myPrefs = {};
+    memberRows.forEach(r => { myPrefs[r.conversation_id] = { muted: !!r.muted, pinned: !!r.pinned }; });
     conversations = convs.map(c => {
       const lm = lastMsgMap[c.id] || null;
-      return { ...c, member_ids: memberMap[c.id] || [], last_msg: lm, unread: unreadMap[c.id] || 0, last_activity: lm ? lm.created_at : c.updated_at };
+      const pref = myPrefs[c.id] || {};
+      return { ...c, member_ids: memberMap[c.id] || [], last_msg: lm, unread: unreadMap[c.id] || 0, last_activity: lm ? lm.created_at : c.updated_at, muted: !!pref.muted, pinned: !!pref.pinned };
     });
-    conversations.sort((a, b) => (b.last_activity || '').localeCompare(a.last_activity || ''));
+    // 置顶的排在最前，组内仍按最后活动时间倒序
+    conversations.sort((a, b) => (b.pinned - a.pinned) || (b.last_activity || '').localeCompare(a.last_activity || ''));
     maybeNotify(unreadMap, lastMsgMap);
     renderConvList();
     if (currentConvId && !conversations.some(c => c.id === currentConvId)) resetChatView();
@@ -1184,8 +1196,11 @@ function renderConvList() {
       preview = plainPreview(conv.last_msg.content) || '[文件]';
       if (conv.type === 'group') preview = (conv.last_msg.sender_id === currentUser.id ? '我' : userName(conv.last_msg.sender_id)) + '：' + preview;
     }
+    const muteIcon = conv.muted ? '<svg class="conv-mute"><use href="#i-bell-off"/></svg>' : '';
+    const badge = conv.unread ? (conv.muted ? '<span class="unread-dot"></span>' : `<span class="unread-badge">${conv.unread > 99 ? '99+' : conv.unread}</span>`) : '';
+    if (conv.pinned) item.classList.add('pinned');
     info.innerHTML = `<div class="conv-line"><div class="conv-name">${escHtml(getConvName(conv))}</div><div class="conv-time">${conv.last_msg ? formatListTime(conv.last_msg.created_at) : ''}</div></div>
-      <div class="conv-line"><div class="conv-preview">${escHtml(preview) || '&nbsp;'}</div>${conv.unread ? `<span class="unread-badge">${conv.unread > 99 ? '99+' : conv.unread}</span>` : ''}</div>`;
+      <div class="conv-line"><div class="conv-preview">${escHtml(preview) || '&nbsp;'}</div>${muteIcon}${badge}</div>`;
     item.appendChild(info);
     item.addEventListener('click', () => selectConv(conv.id));
     list.appendChild(item);
@@ -1427,7 +1442,7 @@ function appendMessage(msg, animate = true) {
   }
   const files = msg.files || [];
   files.forEach(f => bubble.appendChild(renderAttachment(f)));
-  if (!text && !msg.reply_to && files.length && files.every(f => (f.file_type || '').startsWith('image/'))) bubble.classList.add('media-only');
+  if (!text && !msg.reply_to && files.length && files.every(f => attachType(f).startsWith('image/'))) bubble.classList.add('media-only');
   row.appendChild(bubble);
 
   const more = document.createElement('button');
@@ -1453,8 +1468,35 @@ function appendMessage(msg, animate = true) {
   return el;
 }
 
+const EXT_TYPES = { png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg', gif:'image/gif', webp:'image/webp',
+  bmp:'image/bmp', svg:'image/svg+xml', heic:'image/heic', mp4:'video/mp4', webm:'video/webm', mov:'video/quicktime',
+  mp3:'audio/mpeg', ogg:'audio/ogg', wav:'audio/wav', m4a:'audio/mp4' };
+
+function attachType(f) {
+  const t = f.file_type || '';
+  if (t && t !== 'application/octet-stream' && t !== 'binary/octet-stream') return t;
+  const ext = (f.file_name || '').split('.').pop().toLowerCase();
+  return EXT_TYPES[ext] || t;
+}
+
+// 有些客户端传上来的文件没有正确的 content-type，扩展名也认不出来（比如 .v1）。
+// 这种情况下先按文件渲染，同时拿 Image 探一下，能解码就换成图片。
+function probeAsImage(wrap, f) {
+  const probe = new Image();
+  probe.onload = () => {
+    const img = document.createElement('img');
+    img.className = 'img-attach';
+    img.src = f.file_url;
+    img.alt = f.file_name || '';
+    img.addEventListener('click', e => { e.stopPropagation(); openLightbox(f.file_url, f.file_name); });
+    wrap.textContent = '';
+    wrap.appendChild(img);
+  };
+  probe.src = f.file_url;
+}
+
 function renderAttachment(f) {
-  const type = f.file_type || '';
+  const type = attachType(f);
   const wrap = document.createElement('div');
   wrap.className = 'attach';
   if (type.startsWith('image/')) {
@@ -1490,6 +1532,7 @@ function renderAttachment(f) {
   addBtn('下载', () => forceDownload(f.file_url, f.file_name));
   wrap.appendChild(acts);
   card.addEventListener('click', () => forceDownload(f.file_url, f.file_name));
+  if (!type || type === 'application/octet-stream' || type === 'binary/octet-stream') probeAsImage(wrap, f);
   return wrap;
 }
 
@@ -1889,6 +1932,7 @@ function maybeNotify(unreadMap, lastMsgMap) {
     Object.keys(unreadMap).forEach(cid => {
       if ((unreadMap[cid] || 0) > (prevUnreadMap[cid] || 0)) {
         const conv = conversations.find(c => c.id === cid);
+        if (conv && conv.muted) return;
         const lm = lastMsgMap[cid];
         try { new Notification(conv ? getConvName(conv) : '新消息', { body: lm ? (plainPreview(lm.content) || '[文件]') : '', tag: cid }); } catch (e) {}
       }
@@ -1968,6 +2012,8 @@ $('chat-menu-btn').addEventListener('click', e => {
     menu.appendChild(b);
   };
   add('search', '搜索聊天记录', openSearch);
+  add(conv.pinned ? 'unpin' : 'pin', conv.pinned ? '取消置顶' : '置顶聊天', () => togglePref(conv, 'pinned'));
+  add(conv.muted ? 'bell' : 'bell-off', conv.muted ? '恢复提醒' : '消息免打扰', () => togglePref(conv, 'muted'));
   if (conv.type === 'group') {
     add('pen', '修改群名', () => openRename(conv));
     add('users', '群成员', openMembersPanel);
@@ -1980,6 +2026,16 @@ $('chat-menu-btn').addEventListener('click', e => {
   const r = e.currentTarget.getBoundingClientRect();
   showMenu(menu, r.right - 160, r.bottom + 6);
 });
+
+async function togglePref(conv, key) {
+  const next = !conv[key];
+  const { error } = await sb.from('conversation_members').update({ [key]: next }).eq('conversation_id', conv.id).eq('user_id', currentUser.id);
+  if (error) { toast('操作失败：' + error.message, true); return; }
+  conv[key] = next;
+  if (key === 'pinned') conversations.sort((a, b) => (b.pinned - a.pinned) || (b.last_activity || '').localeCompare(a.last_activity || ''));
+  renderConvList();
+  toast(key === 'pinned' ? (next ? '已置顶' : '已取消置顶') : (next ? '已开启免打扰' : '已恢复提醒'));
+}
 
 function openRename(conv) {
   $('rename-input').value = conv.name || '';
