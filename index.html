@@ -134,6 +134,8 @@
     .side-top .brand-mark { background: none; width: 26px; height: 26px; color: #fff4d2; filter: drop-shadow(0 0 6px rgba(255,236,180,.55)); }
     .side-top .brand-mark svg { width: 22px; height: 22px; }
     .add-wrap { position: relative; }
+    /* 加号菜单展开时要盖住下面那行的设置图标 */
+    #sidebar .side-top { z-index: 2; }
     #sidebar-tabs[hidden] { display: none; }
     #sidebar .me-row { padding-bottom: 40px; }
 
@@ -387,6 +389,12 @@
     #iframe-header { display: flex; align-items: center; gap: 8px; padding: calc(10px + var(--safe-t)) 12px 10px; background: var(--panel); border-bottom: 1px solid var(--line); }
     #iframe-filename { flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #file-iframe { flex: 1; border: none; background: #fff; }
+    /* docx 在本地解析后直接渲染，不走微软的在线查看器（国内连不上） */
+    #docx-view { display: none; flex: 1; overflow: auto; padding: 16px; background: var(--panel); color: var(--text); line-height: 1.7; font-size: 15px; }
+    #docx-view.show { display: block; }
+    #docx-view img, #docx-view table { max-width: 100%; }
+    #docx-view table { border-collapse: collapse; }
+    #docx-view td, #docx-view th { border: 1px solid var(--line); padding: 4px 8px; }
     #preview-content { flex: 1; overflow: auto; background: var(--panel2); padding: 12px; border-radius: 12px; font-size: 12px; font-family: var(--mono); white-space: pre-wrap; word-break: break-all; min-height: 100px; max-height: 60dvh; }
 
     #toast { position: fixed; left: 50%; top: calc(16px + var(--safe-t)); transform: translate(-50%, -20px); background: var(--text); color: var(--panel); padding: 10px 16px; border-radius: 12px; font-size: 14px; z-index: 500; opacity: 0; pointer-events: none; transition: all .2s; max-width: calc(100vw - 32px); box-shadow: var(--shadow-lg); }
@@ -532,6 +540,7 @@
     <button class="icon-btn" id="iframe-download-btn"><svg><use href="#i-download"/></svg></button>
   </div>
   <iframe id="file-iframe"></iframe>
+  <div id="docx-view"></div>
 </div>
 
 <!-- auth -->
@@ -1294,6 +1303,13 @@ $('messages-area').addEventListener('scroll', () => {
 }, { passive: true });
 $('messages-area').addEventListener('load', e => { if (e.target.tagName === 'IMG' && pinnedBottom) scrollToBottom(); }, true);
 function scrollToBottom() { const a = $('messages-area'); a.scrollTop = a.scrollHeight; }
+// 刚进会话时多钉几次：首帧算出来的高度不含还没加载完的图片/头像/字体
+function pinToBottom(gen) {
+  const again = () => { if (gen !== undefined && gen !== loadGen) return; pinnedBottom = true; scrollToBottom(); };
+  again();
+  requestAnimationFrame(again);
+  [80, 250, 600, 1200].forEach(t => setTimeout(again, t));
+}
 
 async function fetchFiles(ids) {
   if (!ids.length) return {};
@@ -1304,7 +1320,9 @@ async function fetchFiles(ids) {
 }
 
 async function loadMessages(convId, gen) {
-  const { data: msgs, error } = await sb.from('messages').select('*').eq('conversation_id', convId).order('created_at', { ascending: true }).limit(2000);
+  // 必须倒序取最近的：PostgREST 服务端最多返回 1000 行，正序取会永远停在最早那 1000 条
+  const { data: recent, error } = await sb.from('messages').select('*').eq('conversation_id', convId).order('created_at', { ascending: false }).limit(400);
+  const msgs = (recent || []).slice().reverse();
   if (gen !== loadGen || convId !== currentConvId) return;
   if (error) { toast('消息加载失败', true); return; }
   if (!msgs || msgs.length === 0) { showEmptyChat(); return; }
@@ -1313,8 +1331,7 @@ async function loadMessages(convId, gen) {
   msgs.forEach(m => { m.files = fileMap[m.id] || []; msgCache.set(m.id, m); renderedMsgIds.add(m.id); });
   lastMsgTimestamp = msgs[msgs.length - 1].created_at;
   rerenderCurrentMessages();
-  pinnedBottom = true;
-  scrollToBottom();
+  pinToBottom(gen);
 }
 function showEmptyChat() {
   const list = $('msg-list');
@@ -1635,27 +1652,30 @@ async function sendMessage() {
   if (!content && pendingFiles.length === 0) return;
   if (!currentConvId) return;
   const files = pendingFiles.slice();
-  const draft = {
-    id: 'local-' + Date.now() + Math.random().toString(36).slice(2),
+  // 多个文件拆成一张一条（文字单独一条），这样引用时能指到具体某张
+  const parts = files.length <= 1 ? [{ content, files }]
+    : [...(content ? [{ content, files: [] }] : []), ...files.map(f => ({ content: '', files: [f] }))];
+  const replyId = replyTarget ? replyTarget.id : null;
+  const drafts = parts.map((p, k) => ({
+    id: 'local-' + Date.now() + k + Math.random().toString(36).slice(2),
     conversation_id: currentConvId,
     sender_id: currentUser.id,
-    content,
-    reply_to: replyTarget ? replyTarget.id : null,
-    created_at: new Date().toISOString(),
-    files: files.map(f => ({ file_name: f.name, file_type: f.type, file_size: f.size, file_url: f.type.startsWith('image/') ? URL.createObjectURL(f) : '' })),
-    _raw: files,
+    content: p.content,
+    reply_to: k === 0 ? replyId : null,
+    created_at: new Date(Date.now() + k).toISOString(),
+    files: p.files.map(f => ({ file_name: f.name, file_type: f.type, file_size: f.size, file_url: f.type.startsWith('image/') ? URL.createObjectURL(f) : '' })),
+    _raw: p.files,
     _state: 'pending'
-  };
+  }));
   input.value = ''; autoResize();
   pendingFiles = []; renderFilePreviews();
   clearReply();
   $('mention-popup').classList.remove('open');
   sendTyping(false);
   pinnedBottom = true;
-  msgCache.set(draft.id, draft);
-  appendMessage(draft);
+  drafts.forEach(d => { msgCache.set(d.id, d); appendMessage(d); });
   scrollToBottom();
-  await deliver(draft);
+  for (const d of drafts) await deliver(d);
 }
 
 async function deliver(draft) {
@@ -1753,10 +1773,9 @@ async function sendSticker(id) {
   };
   clearReply();
   pinnedBottom = true;
-  msgCache.set(draft.id, draft);
-  appendMessage(draft);
+  drafts.forEach(d => { msgCache.set(d.id, d); appendMessage(d); });
   scrollToBottom();
-  await deliver(draft);
+  for (const d of drafts) await deliver(d);
 }
 $('sticker-btn').addEventListener('click', () => {
   const panel = $('sticker-panel');
@@ -2326,11 +2345,35 @@ async function forceDownload(url, filename) {
 function previewFileOnline(url, filename) {
   const ext = (filename || '').split('.').pop().toLowerCase();
   $('iframe-filename').textContent = filename;
-  $('file-iframe').src = ext === 'pdf' ? url : `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
   $('iframe-download-btn').onclick = () => forceDownload(url, filename);
+  const docx = $('docx-view');
+  docx.classList.remove('show');
+  docx.innerHTML = '';
+  if (ext === 'docx') {
+    $('file-iframe').style.display = 'none';
+    docx.classList.add('show');
+    docx.textContent = '加载中…';
+    renderDocx(url, docx);
+  } else {
+    $('file-iframe').style.display = '';
+    $('file-iframe').src = ext === 'pdf' ? url : `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
+  }
   $('file-iframe-modal').classList.add('open');
 }
-function closeFilePreview() { $('file-iframe-modal').classList.remove('open'); $('file-iframe').src = 'about:blank'; }
+async function renderDocx(url, box) {
+  try {
+    if (!window.mammoth) await new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js';
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+    const buf = await (await fetch(url)).arrayBuffer();
+    const r = await window.mammoth.convertToHtml({ arrayBuffer: buf });
+    box.innerHTML = r.value || '<p>（文档是空的）</p>';
+  } catch (e) { box.textContent = '预览失败，请下载后打开'; }
+}
+function closeFilePreview() { $('file-iframe-modal').classList.remove('open'); $('file-iframe').src = 'about:blank'; $('docx-view').classList.remove('show'); $('docx-view').innerHTML = ''; }
 async function previewTextFile(url, filename) {
   try {
     $('preview-filename').textContent = filename;
