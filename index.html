@@ -1781,9 +1781,9 @@ async function sendSticker(id) {
   };
   clearReply();
   pinnedBottom = true;
-  drafts.forEach(d => { msgCache.set(d.id, d); appendMessage(d); });
+  msgCache.set(draft.id, draft); appendMessage(draft);
   scrollToBottom();
-  for (const d of drafts) await deliver(d);
+  await deliver(draft);
 }
 $('sticker-btn').addEventListener('click', () => {
   const panel = $('sticker-panel');
