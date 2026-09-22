@@ -215,6 +215,11 @@
 
     .img-attach { display: block; max-width: min(260px, 100%); max-height: 320px; border-radius: 14px; cursor: zoom-in; object-fit: cover; }
     .msg.self .img-attach { margin-left: auto; }
+    .csv-wrap { overflow: auto; max-width: 100%; }
+    .csv-table { border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+    .csv-table th, .csv-table td { border: 1px solid var(--line); padding: 4px 8px; white-space: nowrap; text-align: left; }
+    .csv-table th { background: var(--panel2); position: sticky; top: 0; }
+    .csv-count { font-size: 12px; color: var(--text3); margin-top: 6px; }
     video.img-attach { background: var(--panel2); }
     video.img-attach { cursor: default; }
     .file-card { display: flex; align-items: center; gap: 10px; padding: 6px 2px; min-width: 200px; cursor: pointer; }
@@ -2350,7 +2355,12 @@ function previewFileOnline(url, filename) {
   const docx = $('docx-view');
   docx.classList.remove('show');
   docx.innerHTML = '';
-  if (ext === 'docx') {
+  if (ext === 'csv') {
+    $('file-iframe').style.display = 'none';
+    docx.classList.add('show');
+    docx.textContent = '加载中…';
+    renderCsv(url, docx);
+  } else if (ext === 'docx') {
     $('file-iframe').style.display = 'none';
     docx.classList.add('show');
     docx.textContent = '加载中…';
@@ -2360,6 +2370,31 @@ function previewFileOnline(url, filename) {
     $('file-iframe').src = ext === 'pdf' ? url : `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
   }
   $('file-iframe-modal').classList.add('open');
+}
+function parseCsv(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      row.push(cell); cell = ''; rows.push(row); row = [];
+    } else cell += ch;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(c => c !== ''));
+}
+async function renderCsv(url, box) {
+  try {
+    const rows = parseCsv((await fetchTextUtf8(url)).replace(/^\uFEFF/, ''));
+    if (!rows.length) { box.textContent = '（表格是空的）'; return; }
+    const esc = v => escHtml(v);
+    box.innerHTML = `<div class="csv-wrap"><table class="csv-table"><thead><tr>${rows[0].map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.slice(1).map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="csv-count">${rows.length - 1} 行 × ${rows[0].length} 列</div>`;
+  } catch (e) { box.textContent = '预览失败，请下载后打开'; }
 }
 async function renderDocx(url, box) {
   try {
