@@ -220,6 +220,8 @@
     .csv-table th, .csv-table td { border: 1px solid var(--line); padding: 4px 8px; white-space: nowrap; text-align: left; }
     .csv-table th { background: var(--panel2); position: sticky; top: 0; }
     .csv-count { font-size: 12px; color: var(--text3); margin-top: 6px; }
+    .pdf-page { display: block; margin: 0 auto 12px; max-width: 100%; box-shadow: var(--shadow); background: #fff; }
+    .sheet-name { margin: 14px 0 6px; font-size: 14px; }
     video.img-attach { background: var(--panel2); }
     video.img-attach { cursor: default; }
     .file-card { display: flex; align-items: center; gap: 10px; padding: 6px 2px; min-width: 200px; cursor: pointer; }
@@ -2355,7 +2357,12 @@ function previewFileOnline(url, filename) {
   const docx = $('docx-view');
   docx.classList.remove('show');
   docx.innerHTML = '';
-  if (ext === 'csv') {
+  if (ext === 'pdf' || ext === 'xlsx' || ext === 'xls') {
+    $('file-iframe').style.display = 'none';
+    docx.classList.add('show');
+    docx.textContent = '加载中…';
+    (ext === 'pdf' ? renderPdf : renderSheet)(url, docx);
+  } else if (ext === 'csv') {
     $('file-iframe').style.display = 'none';
     docx.classList.add('show');
     docx.textContent = '加载中…';
@@ -2387,6 +2394,53 @@ function parseCsv(text) {
   }
   if (cell || row.length) { row.push(cell); rows.push(row); }
   return rows.filter(r => r.some(c => c !== ''));
+}
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector(`script[src="${src}"]`)) return res();
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+async function renderPdf(url, box) {
+  try {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    const lib = window.pdfjsLib;
+    lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const pdf = await lib.getDocument({ data: await (await fetch(url)).arrayBuffer() }).promise;
+    box.innerHTML = '';
+    const w = Math.max(320, box.clientWidth - 32);
+    for (let n = 1; n <= pdf.numPages; n++) {
+      const page = await pdf.getPage(n);
+      const base = page.getViewport({ scale: 1 });
+      const dpr = window.devicePixelRatio || 1;
+      const vp = page.getViewport({ scale: w / base.width * dpr });
+      const c = document.createElement('canvas');
+      c.className = 'pdf-page';
+      c.width = vp.width; c.height = vp.height;
+      c.style.width = (vp.width / dpr) + 'px';
+      box.appendChild(c);
+      await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    }
+  } catch (e) { box.textContent = '预览失败，请下载后打开'; }
+}
+function tableHtml(rows) {
+  if (!rows.length) return '<div class="csv-count">（空表）</div>';
+  const n = Math.max(...rows.map(r => r.length));
+  const cell = (c, t) => `<${t}>${escHtml(c == null ? '' : String(c))}</${t}>`;
+  const fill = r => Array.from({ length: n }, (_, i) => r[i]);
+  return `<div class="csv-wrap"><table class="csv-table"><thead><tr>${fill(rows[0]).map(c => cell(c, 'th')).join('')}</tr></thead><tbody>${rows.slice(1).map(r => `<tr>${fill(r).map(c => cell(c, 'td')).join('')}</tr>`).join('')}</tbody></table></div><div class="csv-count">${rows.length - 1} 行 × ${n} 列</div>`;
+}
+async function renderSheet(url, box) {
+  try {
+    await loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+    const wb = XLSX.read(await (await fetch(url)).arrayBuffer(), { type: 'array' });
+    box.innerHTML = wb.SheetNames.map(name => {
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: '', raw: false }).filter(r => r.some(c => c !== ''));
+      return (wb.SheetNames.length > 1 ? `<h4 class="sheet-name">${escHtml(name)}</h4>` : '') + tableHtml(rows);
+    }).join('');
+  } catch (e) { box.textContent = '预览失败，请下载后打开'; }
 }
 async function renderCsv(url, box) {
   try {
