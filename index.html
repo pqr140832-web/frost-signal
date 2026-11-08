@@ -445,6 +445,7 @@
   <symbol id="i-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 11-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8l9-9a3.7 3.7 0 0 1 5.2 5.2l-9 9a1.8 1.8 0 0 1-2.6-2.6l8.3-8.3"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
   <symbol id="i-reply" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v5"/></symbol>
+  <symbol id="i-forward" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0-6 6v5"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></symbol>
   <symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></symbol>
   <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></symbol>
@@ -605,6 +606,14 @@
   </div>
 </div>
 
+<!-- forward -->
+<div class="modal-bg" id="forward-modal">
+  <div class="modal">
+    <div class="modal-head"><h2>转发给</h2><button class="icon-btn" data-close><svg><use href="#i-x"/></svg></button></div>
+    <div id="forward-list"></div>
+  </div>
+</div>
+
 <!-- avatar crop -->
 <div class="modal-bg" id="crop-modal">
   <div class="modal">
@@ -715,11 +724,26 @@
   </div>
 </div>
 <script>
-const SUPABASE_URL = 'https://deuvpiwjzkfmeswzztlf.supabase.co';
+const SUPABASE_URL = 'https://frostline.pages.dev';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRldXZwaXdqemtmbWVzd3p6dGxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MzA0ODUsImV4cCI6MjA4OTUwNjQ4NX0.ImERt2pZDxVmCLQwmEJ_QlgCn7978AIa_GNsqfQ3lf8';
 const VAPID_PUBLIC = 'BPzjOm5vm3sFIXe6JlhjKxk5OhYePuIN49bdHcEfT924q0WkQqNUX-wZkvknY_OHbGvSz7t2T6iiMB5MjrFQU10';
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Cloudflare 挂了就改走 Supabase 备用库（只同步了账号和会话，备用期间的消息不会回到主库）
+const BACKUP_URL = 'https://deuvpiwjzkfmeswzztlf.supabase.co';
+let backupUntil = 0;
+async function failoverFetch(input, init) {
+  const url = typeof input === 'string' ? input : input.url;
+  const toBackup = () => fetch(url.replace(SUPABASE_URL, BACKUP_URL), init);
+  if (!url.startsWith(SUPABASE_URL)) return fetch(input, init);
+  if (Date.now() < backupUntil) return toBackup();
+  try {
+    const res = await fetch(input, init);
+    if (res.status < 500) return res;
+  } catch (e) {}
+  backupUntil = Date.now() + 60000;
+  return toBackup();
+}
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { global: { fetch: failoverFetch } });
 const $ = id => document.getElementById(id);
 
 // ── STATE ──
@@ -1142,22 +1166,16 @@ async function loadConversations() {
     if (!memberRows) return;
     if (memberRows.length === 0) { conversations = []; renderConvList(); if (currentConvId) resetChatView(); return; }
     const ids = memberRows.map(r => r.conversation_id);
-    const [{ data: convs }, { data: allMembers }, { data: recentMsgs }] = await Promise.all([
+    const [{ data: convs }, { data: allMembers }, { data: summary }] = await Promise.all([
       sb.from('conversations').select('*').in('id', ids),
       sb.from('conversation_members').select('conversation_id,user_id').in('conversation_id', ids),
-      sb.from('messages').select('conversation_id,content,created_at,sender_id').in('conversation_id', ids).order('created_at', { ascending: false }).limit(500)
+      // 每个会话的最后一条和未读数由后端按索引算，不再整批拉消息
+      sb.rpc('conv_summary', { ids, read: getReadMap(), me: currentUser.id, current: currentConvId || '' })
     ]);
     if (!convs) return;
     const memberMap = {};
     (allMembers || []).forEach(m => { (memberMap[m.conversation_id] ||= []).push(m.user_id); });
-    const readMap = getReadMap();
-    const lastMsgMap = {}, unreadMap = {};
-    (recentMsgs || []).forEach(m => {
-      if (!lastMsgMap[m.conversation_id]) lastMsgMap[m.conversation_id] = m;
-      const lastRead = readMap[m.conversation_id];
-      if (m.sender_id !== currentUser.id && m.conversation_id !== currentConvId && (!lastRead || m.created_at > lastRead))
-        unreadMap[m.conversation_id] = (unreadMap[m.conversation_id] || 0) + 1;
-    });
+    const lastMsgMap = (summary && summary.last) || {}, unreadMap = (summary && summary.unread) || {};
     if (Object.values(memberMap).flat().some(id => !userById(id))) await loadAllUsers();
     const myPrefs = {};
     memberRows.forEach(r => { myPrefs[r.conversation_id] = { muted: !!r.muted, pinned: !!r.pinned }; });
@@ -1294,6 +1312,7 @@ function resetChatView() {
   renderConvList();
 }
 $('back-btn').addEventListener('click', () => {
+  if (backToSearch && currentConvId) { $('search-panel').classList.add('open'); return; }
   document.body.classList.remove('in-chat');
   loadConversations();
 });
@@ -1595,6 +1614,7 @@ function openMsgMenu(msg, x, y) {
   };
   add('reply', '引用回复', () => setReply(msg));
   if ((msg.content || '').trim()) add('copy', '复制', () => copyText(msg.content));
+  if (!String(msg.id).startsWith('local-')) add('forward', '转发', () => openForward(msg));
   if (msg.sender_id === currentUser.id) add('undo', '撤回', () => recallMessage(msg), true);
   showMenu(menu, x, y);
 }
@@ -1617,6 +1637,35 @@ async function copyText(text) {
     try { document.execCommand('copy'); toast('已复制'); } catch (err) { toast('复制失败', true); }
     ta.remove();
   }
+}
+
+function openForward(msg) {
+  const list = $('forward-list');
+  list.innerHTML = '';
+  conversations.forEach(conv => {
+    const item = document.createElement('div');
+    item.className = 'conv-item';
+    item.appendChild(convAvatar(conv));
+    const name = document.createElement('div');
+    name.textContent = getConvName(conv);
+    item.appendChild(name);
+    item.addEventListener('click', () => { closeModal('forward-modal'); forwardMessage(msg, conv); });
+    list.appendChild(item);
+  });
+  openModal('forward-modal');
+}
+async function forwardMessage(msg, conv) {
+  const files = (msg.files || []).map(f => ({ file_name: f.file_name, file_type: f.file_type, file_size: f.file_size, file_url: f.file_url }));
+  const { data: row, error } = await sb.from('messages').insert({ conversation_id: conv.id, sender_id: currentUser.id, content: msg.content || '', mentioned_user_ids: [] }).select().single();
+  if (error) { toast('转发失败', true); return; }
+  if (files.length) {
+    const { error: fe } = await sb.from('files').insert(files.map(f => ({ ...f, message_id: row.id })));
+    if (fe) toast('文件记录保存失败', true);
+  }
+  sb.from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', conv.id).then(() => {});
+  toast('已转发到「' + getConvName(conv) + '」');
+  if (conv.id === currentConvId) { row.files = files; msgCache.set(row.id, row); renderedMsgIds.add(row.id); rerenderCurrentMessages(); }
+  loadConversations();
 }
 
 async function recallMessage(msg) {
@@ -1893,7 +1942,9 @@ $('msg-input').addEventListener('paste', e => {
 });
 
 // ── REALTIME ──
-function subscribeGlobal() {
+// 后端搬到 Cloudflare 后没有 realtime，全靠轮询（会话 6 秒、消息 2.5 秒）
+function subscribeGlobal() {}
+function subscribeGlobalRealtime() {
   sb.channel('frostline-global')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => loadConversations())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'conversation_members' }, () => loadConversations())
@@ -1905,6 +1956,9 @@ function unsubscribeConv() {
   typingUsers.clear();
 }
 function subscribeConv(convId) {
+  unsubscribeConv();
+}
+function subscribeConvRealtime(convId) {
   unsubscribeConv();
   msgChannel = sb.channel('msgs-' + convId)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${convId}` }, payload => {
@@ -1979,7 +2033,9 @@ function openSearch() {
   $('search-results').innerHTML = '<div class="search-hint">输入关键词搜索当前对话</div>';
   setTimeout(() => $('search-input').focus(), 50);
 }
-function closeSearch() { $('search-panel').classList.remove('open'); }
+// 从搜索结果跳进某条消息后，返回键先回到搜索结果，而不是退出对话
+let backToSearch = false;
+function closeSearch() { $('search-panel').classList.remove('open'); backToSearch = false; }
 let searchTimer = null;
 $('search-input').addEventListener('input', e => { clearTimeout(searchTimer); searchTimer = setTimeout(() => runSearch(e.target.value), 250); });
 $('search-input').addEventListener('keydown', e => { if (e.key === 'Escape') closeSearch(); });
@@ -2019,7 +2075,7 @@ async function runSearch(raw) {
     body.innerHTML = `<div class="sr-top"><span class="sr-name">${escHtml(m.sender_id === currentUser.id ? '我' : userName(m.sender_id))}</span><span class="sr-time">${formatDateTime(m.created_at)}</span></div>
       <div class="sr-text">${highlight(plainPreview(m.content), q)}</div>`;
     item.appendChild(body);
-    item.addEventListener('click', () => { closeSearch(); jumpToMessage(m.id); });
+    item.addEventListener('click', () => { closeSearch(); backToSearch = true; jumpToMessage(m.id); });
     box.appendChild(item);
   });
 }
@@ -2509,14 +2565,14 @@ async function reportPresence(active) {
     if (!currentUser || !swReg || !swReg.pushManager) return;
     const sub = await swReg.pushManager.getSubscription();
     if (!sub) return;
-    await sb.from('push_subscriptions').update({ active_until: active ? new Date(Date.now() + 45000).toISOString() : null }).eq('endpoint', sub.endpoint);
+    await sb.from('push_subscriptions').update({ active_until: active ? new Date(Date.now() + 130000).toISOString() : null }).eq('endpoint', sub.endpoint);
   } catch (e) {}
 }
 function syncPresence() {
   clearInterval(presenceTimer);
   if (document.visibilityState === 'visible') {
     reportPresence(true);
-    presenceTimer = setInterval(() => reportPresence(true), 20000);
+    presenceTimer = setInterval(() => reportPresence(true), 60000);
   } else reportPresence(false);
 }
 document.addEventListener('visibilitychange', syncPresence);
