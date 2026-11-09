@@ -1539,6 +1539,17 @@ function probeAsImage(wrap, f) {
   probe.src = f.file_url;
 }
 
+// 音视频只有播放器，手机上没法存，补一个下载按钮
+function mediaDownloadBar(f) {
+  const acts = document.createElement('div');
+  acts.className = 'file-actions';
+  const b = document.createElement('button');
+  b.className = 'chip-btn'; b.textContent = '下载';
+  b.addEventListener('click', e => { e.stopPropagation(); forceDownload(f.file_url, f.file_name); });
+  acts.appendChild(b);
+  return acts;
+}
+
 function renderAttachment(f) {
   const type = attachType(f);
   const wrap = document.createElement('div');
@@ -1556,12 +1567,14 @@ function renderAttachment(f) {
     const v = document.createElement('video');
     v.className = 'img-attach'; v.src = f.file_url; v.controls = true; v.preload = 'metadata';
     wrap.appendChild(v);
+    wrap.appendChild(mediaDownloadBar(f));
     return wrap;
   }
   if (type.startsWith('audio/')) {
     const a = document.createElement('audio');
     a.src = f.file_url; a.controls = true; a.style.maxWidth = '100%';
     wrap.appendChild(a);
+    wrap.appendChild(mediaDownloadBar(f));
     return wrap;
   }
   const card = document.createElement('div');
