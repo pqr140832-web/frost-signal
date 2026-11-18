@@ -641,7 +641,7 @@
 <!-- 合并转发的聊天记录 -->
 <div class="modal-bg" id="fwd-view-modal">
   <div class="modal">
-    <div class="modal-head"><h2 id="fwd-view-title">聊天记录</h2><button class="icon-btn" data-close><svg><use href="#i-x"/></svg></button></div>
+    <div class="modal-head"><button class="icon-btn" id="fwd-view-back" hidden><svg><use href="#i-back"/></svg></button><h2 id="fwd-view-title" style="flex:1">聊天记录</h2><button class="icon-btn" data-close><svg><use href="#i-x"/></svg></button></div>
     <div id="fwd-view-list"></div>
   </div>
 </div>
@@ -1718,11 +1718,16 @@ function renderBundleCard(b) {
   card.className = 'fwd-card';
   const lines = b.m.slice(0, 4).map(it => `<div class="fc-line">${escHtml(it.n)}：${escHtml(bundleLine(it))}</div>`).join('');
   card.innerHTML = `<div class="fc-title">${escHtml(b.t)}</div>${lines}<div class="fc-foot">聊天记录 · ${b.m.length} 条</div>`;
-  card.addEventListener('click', e => { e.stopPropagation(); openBundle(b); });
+  card.addEventListener('click', e => { e.stopPropagation(); openBundle(b, !!card.closest('#fwd-view-list')); });
   return card;
 }
-function openBundle(b) {
+var bundleStack = [], bundleCur = null;
+function openBundle(b, nested) {
+  if (nested && bundleCur) bundleStack.push(bundleCur); else if (!nested) bundleStack = [];
+  bundleCur = b;
+  $('fwd-view-back').hidden = !bundleStack.length;
   $('fwd-view-title').textContent = b.t;
+  $('fwd-view-list').scrollTop = 0;
   const list = $('fwd-view-list');
   list.innerHTML = '';
   b.m.forEach(it => {
@@ -1746,6 +1751,7 @@ function openBundle(b) {
   });
   openModal('fwd-view-modal');
 }
+$('fwd-view-back').addEventListener('click', () => { const prev = bundleStack.pop(); if (prev) { const st = bundleStack; openBundle(prev, false); bundleStack = st; $('fwd-view-back').hidden = !st.length; } });
 function enterSelect(msg) {
   selectedIds = new Set([msg.id]);
   document.body.classList.add('selecting');
