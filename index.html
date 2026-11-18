@@ -224,6 +224,28 @@
     .sheet-name { margin: 14px 0 6px; font-size: 14px; }
     video.img-attach { background: var(--panel2); }
     video.img-attach { cursor: default; }
+    .fwd-card { width: min(260px, 100%); cursor: pointer; }
+    .fwd-card .fc-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+    .fwd-card .fc-line { font-size: 13px; opacity: .75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fwd-card .fc-foot { font-size: 11px; opacity: .6; border-top: 1px solid rgba(127,127,127,.25); margin-top: 7px; padding-top: 5px; }
+    .fwd-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .fwd-item:last-child { border-bottom: none; }
+    .fwd-item .fi-body { flex: 1; min-width: 0; }
+    .fwd-item .fi-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text3); margin-bottom: 3px; }
+    .fwd-item .fi-text { font-size: 14px; line-height: 1.55; word-break: break-word; }
+    .fwd-item .fi-text .bubble { box-shadow: none; padding: 0; background: none; color: inherit; }
+    .fwd-item .sticker-img { max-width: 110px; }
+    body.selecting .msg { cursor: pointer; }
+    body.selecting .msg .bubble { pointer-events: none; }
+    body.selecting .msg-more { display: none; }
+    .msg.selected .bubble { box-shadow: 0 0 0 2px var(--accent); }
+    .msg.selected::before { content: ''; position: absolute; top: 50%; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); transform: translateY(-50%); }
+    .msg.self.selected::before { left: 2px; }
+    .msg.other.selected::before { right: 2px; }
+    #select-bar { display: none; align-items: center; gap: 10px; }
+    #select-bar #sel-count { flex: 1; text-align: center; font-size: 14px; color: var(--text2); font-variant-numeric: tabular-nums; }
+    body.selecting #composer > *:not(#select-bar) { display: none !important; }
+    body.selecting #select-bar { display: flex; }
     .file-card { display: flex; align-items: center; gap: 10px; padding: 6px 2px; min-width: 200px; cursor: pointer; }
     .file-card .f-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(127,127,127,.16); display: grid; place-items: center; }
     .file-card .f-name { font-size: 14px; font-weight: 500; word-break: break-all; }
@@ -508,6 +530,7 @@
     <div id="composer" hidden>
       <div id="mention-popup"></div>
       <div id="reply-bar"><svg style="color:var(--accent);width:16px;height:16px"><use href="#i-reply"/></svg><div class="rb-text"></div><button class="icon-btn" id="reply-cancel" style="width:26px;height:26px"><svg style="width:15px;height:15px"><use href="#i-x"/></svg></button></div>
+      <div id="select-bar"><button class="btn btn-ghost" id="sel-cancel">取消</button><span id="sel-count">已选 0 条</span><button class="btn btn-primary" id="sel-forward">合并转发</button></div>
       <div id="file-previews"></div>
       <div id="sticker-panel"></div>
       <div class="composer-row">
@@ -611,6 +634,14 @@
   <div class="modal">
     <div class="modal-head"><h2>转发给</h2><button class="icon-btn" data-close><svg><use href="#i-x"/></svg></button></div>
     <div id="forward-list"></div>
+  </div>
+</div>
+
+<!-- 合并转发的聊天记录 -->
+<div class="modal-bg" id="fwd-view-modal">
+  <div class="modal">
+    <div class="modal-head"><h2 id="fwd-view-title">聊天记录</h2><button class="icon-btn" data-close><svg><use href="#i-x"/></svg></button></div>
+    <div id="fwd-view-list"></div>
   </div>
 </div>
 
@@ -872,6 +903,8 @@ function renderMarkdown(src) {
   return s;
 }
 function plainPreview(content) {
+  const fwd = parseBundle(content);
+  if (fwd) return '[聊天记录] ' + fwd.t;
   return String(content || '').replace(/\[表情:[^\]]+\]/g, '[表情]').replace(/```[\s\S]*?```/g, '[代码]').replace(/\*\*|`|~~/g, '').replace(/\s+/g, ' ').trim();
 }
 
@@ -1245,7 +1278,7 @@ function renderConvList() {
 // ── SELECT CONVERSATION ──
 async function selectConv(id) {
   const gen = ++loadGen;
-  currentConvId = id;
+  currentConvId = id; exitSelect();
   document.body.classList.add('in-chat', 'has-conv');
   closeSearch();
   clearReply();
@@ -1298,7 +1331,7 @@ $('chat-subtitle').addEventListener('click', () => { if ($('chat-subtitle').clas
 
 function resetChatView() {
   loadGen++;
-  currentConvId = null;
+  currentConvId = null; exitSelect();
   if (pollInterval) clearInterval(pollInterval);
   unsubscribeConv();
   document.body.classList.remove('in-chat', 'has-conv');
@@ -1440,6 +1473,7 @@ function appendMessage(msg, animate = true) {
   el.dataset.sender = msg.sender_id;
   el.dataset.ts = msg.created_at;
   if (msg._state) el.classList.add(msg._state);
+  if (selectedIds && selectedIds.has(msg.id)) el.classList.add('selected');
 
   if (!isSelf || isGroup) el.appendChild(userAvatar(msg.sender_id, 'sm'));
   else el.appendChild(document.createElement('span'));
@@ -1470,7 +1504,10 @@ function appendMessage(msg, animate = true) {
   }
   const text = (msg.content || '').trim();
   const stk = text.match(/^\[表情:([^\]]+)\]$/);
-  if (stk) {
+  const bundle = parseBundle(text);
+  if (bundle) {
+    bubble.appendChild(renderBundleCard(bundle));
+  } else if (stk) {
     const im = document.createElement('img');
     im.className = 'sticker-img';
     im.alt = stk[1];
@@ -1627,7 +1664,10 @@ function openMsgMenu(msg, x, y) {
   };
   add('reply', '引用回复', () => setReply(msg));
   if ((msg.content || '').trim()) add('copy', '复制', () => copyText(msg.content));
-  if (!String(msg.id).startsWith('local-')) add('forward', '转发', () => openForward(msg));
+  if (!String(msg.id).startsWith('local-')) {
+    add('forward', '转发', () => openForward(msg));
+    add('forward', '多选', () => enterSelect(msg));
+  }
   if (msg.sender_id === currentUser.id) add('undo', '撤回', () => recallMessage(msg), true);
   showMenu(menu, x, y);
 }
@@ -1651,6 +1691,104 @@ async function copyText(text) {
     ta.remove();
   }
 }
+
+// ── 合并转发 ──
+// 一条消息的 content 存「[聊天记录]」+ 换行 + JSON {t 标题, m:[{s 发送者id, n 名字, ts, c 内容, f 文件}]}，
+// 不用改表；转发这条消息时内容原样带过去，所以能套娃。
+const BUNDLE_TAG = '[聊天记录]';
+var selectedIds = new Set();
+function parseBundle(content) {
+  const s = String(content || '');
+  if (!s.startsWith(BUNDLE_TAG + '\n')) return null;
+  try { const b = JSON.parse(s.slice(BUNDLE_TAG.length + 1)); return b && Array.isArray(b.m) ? b : null; } catch (e) { return null; }
+}
+function bundleLine(it) {
+  const inner = parseBundle(it.c);
+  if (inner) return '[聊天记录]';
+  const t = plainPreview(it.c);
+  if (t) return t;
+  const f = (it.f || [])[0];
+  if (!f) return '';
+  const ty = attachType(f);
+  return ty.startsWith('image/') ? '[图片]' : ty.startsWith('video/') ? '[视频]' : ty.startsWith('audio/') ? '[语音]' : '[文件] ' + f.file_name;
+}
+function renderBundleCard(b) {
+  const card = document.createElement('div');
+  card.className = 'fwd-card';
+  const lines = b.m.slice(0, 4).map(it => `<div class="fc-line">${escHtml(it.n)}：${escHtml(bundleLine(it))}</div>`).join('');
+  card.innerHTML = `<div class="fc-title">${escHtml(b.t)}</div>${lines}<div class="fc-foot">聊天记录 · ${b.m.length} 条</div>`;
+  card.addEventListener('click', e => { e.stopPropagation(); openBundle(b); });
+  return card;
+}
+function openBundle(b) {
+  $('fwd-view-title').textContent = b.t;
+  const list = $('fwd-view-list');
+  list.innerHTML = '';
+  b.m.forEach(it => {
+    const row = document.createElement('div');
+    row.className = 'fwd-item';
+    row.appendChild(it.s && userById(it.s) ? userAvatar(it.s, 'sm') : document.createElement('span'));
+    const body = document.createElement('div');
+    body.className = 'fi-body';
+    body.innerHTML = `<div class="fi-head"><span>${escHtml(it.n)}</span><span>${escHtml(formatDateTime(it.ts))}</span></div>`;
+    const txt = document.createElement('div');
+    txt.className = 'fi-text';
+    const inner = parseBundle(it.c);
+    const stk = (it.c || '').trim().match(/^\[表情:([^\]]+)\]$/);
+    if (inner) txt.appendChild(renderBundleCard(inner));
+    else if (stk) { const im = document.createElement('img'); im.className = 'sticker-img'; im.alt = stk[1]; im.src = STICKER_BASE + '/s/' + encodeURIComponent(stk[1]) + '.webp'; txt.appendChild(im); }
+    else if ((it.c || '').trim()) { const md = document.createElement('div'); md.className = 'md'; md.style.whiteSpace = 'pre-wrap'; md.innerHTML = renderMarkdown(it.c); txt.appendChild(md); }
+    (it.f || []).forEach(f => txt.appendChild(renderAttachment(f)));
+    body.appendChild(txt);
+    row.appendChild(body);
+    list.appendChild(row);
+  });
+  openModal('fwd-view-modal');
+}
+function enterSelect(msg) {
+  selectedIds = new Set([msg.id]);
+  document.body.classList.add('selecting');
+  updateSelectBar();
+  rerenderCurrentMessages();
+}
+function exitSelect() {
+  selectedIds = new Set();
+  document.body.classList.remove('selecting');
+  document.querySelectorAll('#msg-list .msg.selected').forEach(el => el.classList.remove('selected'));
+}
+function updateSelectBar() {
+  $('sel-count').textContent = `已选 ${selectedIds.size} 条`;
+  $('sel-forward').disabled = !selectedIds.size;
+  $('sel-forward').style.opacity = selectedIds.size ? '' : '.5';
+}
+$('messages-area').addEventListener('click', e => {
+  if (!document.body.classList.contains('selecting')) return;
+  const el = e.target.closest('.msg');
+  if (!el || el.classList.contains('pending') || el.classList.contains('failed')) return;
+  e.preventDefault(); e.stopPropagation();
+  const id = el.dataset.id;
+  if (selectedIds.has(id)) { selectedIds.delete(id); el.classList.remove('selected'); }
+  else { selectedIds.add(id); el.classList.add('selected'); }
+  updateSelectBar();
+}, true);
+$('sel-cancel').addEventListener('click', exitSelect);
+$('sel-forward').addEventListener('click', () => {
+  if (!selectedIds.size) return;
+  const msgs = [...selectedIds].map(id => msgCache.get(id)).filter(Boolean).sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const conv = conversations.find(c => c.id === currentConvId);
+  let title;
+  if (conv && conv.type === 'group') title = '群聊「' + getConvName(conv) + '」的聊天记录';
+  else {
+    const names = [...new Set(msgs.map(m => userName(m.sender_id)))];
+    title = (names.length === 1 ? names[0] : names.slice(0, 2).join('和')) + '的聊天记录';
+  }
+  const bundle = { t: title, m: msgs.map(m => ({
+    s: m.sender_id, n: userName(m.sender_id), ts: m.created_at, c: m.content || '',
+    f: (m.files || []).map(f => ({ file_name: f.file_name, file_type: f.file_type, file_size: f.file_size, file_url: f.file_url }))
+  })) };
+  exitSelect();
+  openForward({ content: BUNDLE_TAG + '\n' + JSON.stringify(bundle), files: [] });
+});
 
 function openForward(msg) {
   const list = $('forward-list');
